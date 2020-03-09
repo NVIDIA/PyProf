@@ -1,0 +1,5 @@
+torch>=1.2.0
+cxxfilt>=0.2.0
+tqdm>=4.35.0
+numpy>=1.17.2
+PyYAML>=5.1
