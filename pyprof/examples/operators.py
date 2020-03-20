@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
- # Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
- #
- # Licensed under the Apache License, Version 2.0 (the "License");
- # you may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #     http://www.apache.org/licenses/LICENSE-2.0
- # 
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
-
-
+# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 This file checks all Python operators.
 """
@@ -40,31 +38,81 @@ fc = torch.rand(X, Y).cuda()
 ia = torch.randint(0, 100, (X, Y)).cuda()
 ib = torch.randint(0, 100, (X, Y)).cuda()
 
-sa = torch.ones(1,1).cuda()
-sb = torch.ones(1,1).cuda()
+sa = torch.ones(1, 1).cuda()
+sb = torch.ones(1, 1).cuda()
 
 ba = fa.byte()
 
-unaryOps = ["abs", "__abs__", "neg", "__neg__",]
-invertOps = ["inv", "invert", "__inv__", "__invert__",]	#imlemented only for byte tensors
+unaryOps = [
+    "abs",
+    "__abs__",
+    "neg",
+    "__neg__",
+]
+invertOps = [
+    "inv",
+    "invert",
+    "__inv__",
+    "__invert__",
+]  #imlemented only for byte tensors
 #pos, __pos__ is not implemented for tensors
 
 binaryOps = []
-binaryOps += [ "lt", "__lt__", "le", "__le__", "eq", "__eq__", "ne", "__ne__", "ge", "__ge__", "gt", "__gt__" ]
-binaryOps += [ "add", "__add__", "sub", "__sub__", "mul", "__mul__", "floordiv", "__floordiv__", "truediv", "__truediv__", "pow", "__pow__", "mod", "__mod__"]
-binaryOps += [ "and_", "__and__", "or_", "__or__", "xor", "__xor__", "lshift", "__lshift__", "rshift", "__rshift__"]
+binaryOps += ["lt", "__lt__", "le", "__le__", "eq", "__eq__", "ne", "__ne__", "ge", "__ge__", "gt", "__gt__"]
+binaryOps += [
+    "add", "__add__", "sub", "__sub__", "mul", "__mul__", "floordiv", "__floordiv__", "truediv", "__truediv__", "pow",
+    "__pow__", "mod", "__mod__"
+]
+binaryOps += ["and_", "__and__", "or_", "__or__", "xor", "__xor__", "lshift", "__lshift__", "rshift", "__rshift__"]
 
 inplaceOps = []
-inplaceOps += ["iadd", "__iadd__", "isub", "__isub__", "imul", "__imul__", "ifloordiv", "__ifloordiv__", "itruediv", "__itruediv__", "imod", "__imod__",]
+inplaceOps += [
+    "iadd",
+    "__iadd__",
+    "isub",
+    "__isub__",
+    "imul",
+    "__imul__",
+    "ifloordiv",
+    "__ifloordiv__",
+    "itruediv",
+    "__itruediv__",
+    "imod",
+    "__imod__",
+]
 #ipow, __ipow__ is not implemented in pytorch
-inplaceOps += [ "iand", "__iand__", "ior", "__ior__", "ixor", "__ixor__", "ilshift", "__ilshift__", "irshift", "__irshift__",]
+inplaceOps += [
+    "iand",
+    "__iand__",
+    "ior",
+    "__ior__",
+    "ixor",
+    "__ixor__",
+    "ilshift",
+    "__ilshift__",
+    "irshift",
+    "__irshift__",
+]
 
-matmulOps = [ "matmul", "__matmul__" ]
-inplacematmulOps = [ "imatmul", "__imatmul__" ]
+matmulOps = ["matmul", "__matmul__"]
+inplacematmulOps = ["imatmul", "__imatmul__"]
 
-reverseIntBinaryOps = ["__radd__", "__rsub__", "__rmul__", "__rfloordiv__", "__rpow__",]
-reverseFloatBinaryOps = ["__radd__", "__rsub__", "__rmul__", "__rdiv__", "__rtruediv__", "__rfloordiv__", "__rpow__",]
-
+reverseIntBinaryOps = [
+    "__radd__",
+    "__rsub__",
+    "__rmul__",
+    "__rfloordiv__",
+    "__rpow__",
+]
+reverseFloatBinaryOps = [
+    "__radd__",
+    "__rsub__",
+    "__rmul__",
+    "__rdiv__",
+    "__rtruediv__",
+    "__rfloordiv__",
+    "__rpow__",
+]
 '''
 TODO
 .concat(a, b)
@@ -89,58 +137,57 @@ TODO
 #Context manager
 with torch.autograd.profiler.emit_nvtx():
 
-	#Start profiler
-	profiler.start()
+    #Start profiler
+    profiler.start()
 
-	for op in unaryOps:
-		assert hasattr(operator, op)
-		f = getattr(operator, op)
-		assert inspect.isbuiltin(f)
-		c = f(ia)
+    for op in unaryOps:
+        assert hasattr(operator, op)
+        f = getattr(operator, op)
+        assert inspect.isbuiltin(f)
+        c = f(ia)
 
-	for op in invertOps:
-		assert hasattr(operator, op)
-		f = getattr(operator, op)
-		assert inspect.isbuiltin(f)
-		c = f(ba)
+    for op in invertOps:
+        assert hasattr(operator, op)
+        f = getattr(operator, op)
+        assert inspect.isbuiltin(f)
+        c = f(ba)
 
-	for op in binaryOps:
-		assert hasattr(operator, op)
-		f = getattr(operator, op)
-		assert inspect.isbuiltin(f)
-		c = f(ia, ib)
-		c = f(ia, 2)
+    for op in binaryOps:
+        assert hasattr(operator, op)
+        f = getattr(operator, op)
+        assert inspect.isbuiltin(f)
+        c = f(ia, ib)
+        c = f(ia, 2)
 
-	for op in inplaceOps:
-		assert hasattr(operator, op)
-		f = getattr(operator, op)
-		assert inspect.isbuiltin(f)
-		ia = f(ia, ib)
-		ia = f(ia, 2)
+    for op in inplaceOps:
+        assert hasattr(operator, op)
+        f = getattr(operator, op)
+        assert inspect.isbuiltin(f)
+        ia = f(ia, ib)
+        ia = f(ia, 2)
 
-	for op in matmulOps:
-		assert hasattr(operator, op)
-		f = getattr(operator, op)
-		assert inspect.isbuiltin(f)
-		c = f(fa, fb)
+    for op in matmulOps:
+        assert hasattr(operator, op)
+        f = getattr(operator, op)
+        assert inspect.isbuiltin(f)
+        c = f(fa, fb)
 
-	for op in inplacematmulOps:
-		assert hasattr(operator, op)
-		f = getattr(operator, op)
-		assert inspect.isbuiltin(f)
-		fa = f(fa, fb)
+    for op in inplacematmulOps:
+        assert hasattr(operator, op)
+        f = getattr(operator, op)
+        assert inspect.isbuiltin(f)
+        fa = f(fa, fb)
 
-	for op in reverseIntBinaryOps:
-		assert hasattr(torch.Tensor, op)
-		f = getattr(torch.Tensor, op)
-		ia = f(ia, ib)
+    for op in reverseIntBinaryOps:
+        assert hasattr(torch.Tensor, op)
+        f = getattr(torch.Tensor, op)
+        ia = f(ia, ib)
 
-	for op in reverseFloatBinaryOps:
-		assert hasattr(torch.Tensor, op)
-		f = getattr(torch.Tensor, op)
-		fa = f(fa, fb)
-
-	'''
+    for op in reverseFloatBinaryOps:
+        assert hasattr(torch.Tensor, op)
+        f = getattr(torch.Tensor, op)
+        fa = f(fa, fb)
+    '''
 	#c = fa[3]
 	#c = fa[3][3]
 	#c = torch.min(fa, 3)
@@ -157,5 +204,5 @@ with torch.autograd.profiler.emit_nvtx():
 	c = a is not b
 	'''
 
-	#Stop profiler
-	profiler.stop()
+    #Stop profiler
+    profiler.stop()
