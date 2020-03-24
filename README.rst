@@ -26,10 +26,10 @@ PyProf - PyTorch Profiling tool
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
 models. PyProf aggregates kernel performance from `Nsight Systems
 <https://developer.nvidia.com/nsight-systems>`_ or `NvProf
-<https://developer.nvidia.com/nvidia-visual-profiler>`_ and provide the 
+<https://developer.nvidia.com/nvidia-visual-profiler>`_ and provides the 
 following additional features:
 
-* Identifies the layer that launched the kernel: e.g. the association of 
+* Identifies the layer that launched a kernel: e.g. the association of 
   `ComputeOffsetsKernel` with a concrete PyTorch layer or API is not obvious.
 
 * Identifies the tensor dimensions and precision: without knowing the tensor 
@@ -49,6 +49,24 @@ following additional features:
  
 * Correlate the line in the user's code that launched a particular kernel (program trace).
 
+For FLOP and bandwidth calculations, we use a relatively straightforward approach. 
+For example, for matrices AMxK and BKxN, the FLOP count for a matrix multiplication is 
+2 * M * N * K, and bandwidth is M * K + N * K + M * N. Note that the numbers PyProf 
+generates are based on the algorithm, not the actual performance of the specific kernel. 
+For more details, see NVIDIA's Deep Learning Performance Guide 
+<https://docs.nvidia.com/deeplearning/performance/index.html> _.
+
+Using the information provided by PyProf, the user can identify various issues to 
+help tune the network. For instance, according to the Tensor Core Performance Guide 
+<https://docs.nvidia.com/deeplearning/performance/mixed-precision-training/index.html#tensor-core-shape> _, 
+the M, N and K dimensions that result in Tensor Core usage need to be divisible by 8. 
+In fact, PyProf comes with a flag that lets the user obtain information regarding 
+whether Tensor Cores were used by the kernel. Other useful information might include 
+knowing that a particular kernel did not exploit much thread parallelism, as 
+determined by the grid/block dimensions. Since many PyTorch kernels are open-source 
+(or even custom written by the user, as in CUDA Extensions), this provides the user 
+with information that helps root cause performance issues and prioritize optimization work.
+
 .. overview-end-marker-do-not-remove
 
 TODO: add release information here
@@ -57,6 +75,8 @@ Documentation
 -------------
 
 TODO: add links to Documentation
+* `Installation <https://github.com/NVIDIA/PyProf/blob/master/docs/install.rst>` _.
+
 
 Contributing
 ------------
