@@ -31,6 +31,6 @@ Installing from GitHub
 
     * pip install .
 
-    * verify installation is complete via: "pip list | grep pyprof" 
-        * should display "pyprof 0.1"
+    * verify installation is complete via:  ``pip list | grep pyprof``. 
+        # it should display ``pyprof 0.1``
     

@@ -59,7 +59,6 @@ Documentation
 TODO: add links to Documentation
 * `Installation <https://github.com/NVIDIA/PyProf/blob/master/docs/install.rst>` _.
 
-
 Contributing
 ------------
 
