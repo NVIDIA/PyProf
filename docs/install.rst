@@ -25,5 +25,12 @@ PyProf is available from GitHub.
 Installing from GitHub
 ----------------------
 
-    TODO: Add instruction on how to install from GitHub.
+    * git clone https://github.com/NVIDIA/PyProf.git
+
+    * navigate to the top level PyProf directory
+
+    * pip install .
+
+    * verify installation is complete via:  ``pip list | grep pyprof``. 
+        # it should display ``pyprof 0.1``
     

@@ -26,10 +26,10 @@ PyProf - PyTorch Profiling tool
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
 models. PyProf aggregates kernel performance from `Nsight Systems
 <https://developer.nvidia.com/nsight-systems>`_ or `NvProf
-<https://developer.nvidia.com/nvidia-visual-profiler>`_ and provide the 
+<https://developer.nvidia.com/nvidia-visual-profiler>`_ and provides the 
 following additional features:
 
-* Identifies the layer that launched the kernel: e.g. the association of 
+* Identifies the layer that launched a kernel: e.g. the association of 
   `ComputeOffsetsKernel` with a concrete PyTorch layer or API is not obvious.
 
 * Identifies the tensor dimensions and precision: without knowing the tensor 
@@ -57,6 +57,7 @@ Documentation
 -------------
 
 TODO: add links to Documentation
+* `Installation <https://github.com/NVIDIA/PyProf/blob/master/docs/install.rst>` _.
 
 Contributing
 ------------
