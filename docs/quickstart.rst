@@ -50,8 +50,15 @@ Add the following lines to the PyTorch network you want to profile: ::
   import pyprof
   pyprof.init()
 
-Profile with NVProf to generate a SQL (NVVP) file. This file can be opened 
-with NVVP, as usual.
+Profile with NVProf or Nsight Systems to generate a SQL file. ::
 
-  *TODO:* Continue with quickstart. This should be brief, just the CLI with
-  little explanation. It is a quickstart guide for reason.
+  $ nsys profile -f true -o net --export sqlite python net.py
+
+Run the parse.py script to generate the dictionary. ::
+  
+  $ python -m pyprof.parse net.sql > net.dict
+
+Run the prof.py script to generate the reports. ::
+
+  $ python -m pyprof.prof --csv net.dict
+

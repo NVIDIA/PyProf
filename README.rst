@@ -49,24 +49,6 @@ following additional features:
  
 * Correlate the line in the user's code that launched a particular kernel (program trace).
 
-For FLOP and bandwidth calculations, we use a relatively straightforward approach. 
-For example, for matrices AMxK and BKxN, the FLOP count for a matrix multiplication is 
-2 * M * N * K, and bandwidth is M * K + N * K + M * N. Note that the numbers PyProf 
-generates are based on the algorithm, not the actual performance of the specific kernel. 
-For more details, see NVIDIA's Deep Learning Performance Guide 
-<https://docs.nvidia.com/deeplearning/performance/index.html> _.
-
-Using the information provided by PyProf, the user can identify various issues to 
-help tune the network. For instance, according to the Tensor Core Performance Guide 
-<https://docs.nvidia.com/deeplearning/performance/mixed-precision-training/index.html#tensor-core-shape> _, 
-the M, N and K dimensions that result in Tensor Core usage need to be divisible by 8. 
-In fact, PyProf comes with a flag that lets the user obtain information regarding 
-whether Tensor Cores were used by the kernel. Other useful information might include 
-knowing that a particular kernel did not exploit much thread parallelism, as 
-determined by the grid/block dimensions. Since many PyTorch kernels are open-source 
-(or even custom written by the user, as in CUDA Extensions), this provides the user 
-with information that helps root cause performance issues and prioritize optimization work.
-
 .. overview-end-marker-do-not-remove
 
 TODO: add release information here

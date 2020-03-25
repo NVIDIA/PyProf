@@ -19,18 +19,39 @@ Profiling PyTorch with PyProf
     TODO: this chapter should go into the details of profiling, 
     including any options.
 
+Overview
+--------
+For FLOP and bandwidth calculations, we use a relatively straightforward approach. 
+For example, for matrices AMxK and BKxN, the FLOP count for a matrix multiplication is 
+2 * M * N * K, and bandwidth is M * K + N * K + M * N. Note that the numbers PyProf 
+generates are based on the algorithm, not the actual performance of the specific kernel. 
+For more details, see `NVIDIA's Deep Learning Performance Guide 
+<https://docs.nvidia.com/deeplearning/performance/index.html>`_.
+
+Using the information provided by PyProf, the user can identify various issues to 
+help tune the network. For instance, according to the `Tensor Core Performance Guide 
+<https://docs.nvidia.com/deeplearning/performance/mixed-precision-training/index.html#tensor-core-shape>`_, 
+the M, N and K dimensions that result in Tensor Core usage need to be divisible by 8. 
+In fact, PyProf comes with a flag that lets the user obtain information regarding 
+whether Tensor Cores were used by the kernel. Other useful information might include 
+knowing that a particular kernel did not exploit much thread parallelism, as 
+determined by the grid/block dimensions. Since many PyTorch kernels are open-source 
+(or even custom written by the user, as in CUDA Extensions), this provides the user 
+with information that helps root cause performance issues and prioritize optimization work.
+
+
 .. _section-profile-enable-profiler:
 
-1. Enable Profiler in PyTorch Network
--------------------------------------
+Enable Profiler in PyTorch Network
+----------------------------------
 
   *TODO:* provide more detail about `torch.cuda.profiler`, why it is needed
   and how to access it. The follow is cut and pasted from old README and needs
   to be expanded.
 
 
-Pyprof makes use of the profiler functionality available in Pytorch
-<https://pytorch.org/docs/stable/autograd.html#profiler> _.
+Pyprof makes use of the profiler functionality available in `Pytorch
+<https://pytorch.org/docs/stable/autograd.html#profiler>`_.
 The profiler allows you to inspect the cost of different operators 
 inside your model, both CPU and GPU, via the "emit_nvtx()" function.
 
@@ -71,8 +92,10 @@ Here's an example: ::
 
 .. _section-profile-with-nvprof:
 
-2a. Profile with NVprof
------------------------
+Profile with NVprof
+-------------------
+
+If you are not using Nvprof, skip ahead to :ref:`section-profile-with-nsys`.
 
 Run NVprof to generate a SQL (NVVP) file. This file can be opened with NVVP.
 
@@ -94,8 +117,8 @@ Please follow the steps described in :ref:`section-profile-hardware-counters`.
 
 .. _section-profile-with-nsys:
 
-2b. Profile with Nsight Systems
--------------------------------
+Profile with Nsight Systems
+---------------------------
 
 Run Nsight Systems to generate a SQLite file.
 
@@ -109,8 +132,8 @@ For all other profiling ::
 
 .. _section-parse-sql-file:
 
-3. Parse the SQL file
----------------------
+Parse the SQL file
+------------------
 Run parser on the SQL file. The output is an ASCII file. Each line
 is a python dictionary which contains information about the kernel name,
 duration, parameters etc. This file can be used as input to other custom
@@ -118,8 +141,8 @@ scripts as well. **Note:** Nsys will create a file called net.sqlite. ::
 
     python -m pyprof.parse net.sql > net.dict
    
-4. Run the prof script
-----------------------
+Run the prof script
+-------------------
 Using the python dictionary created in step 3 as the input, Pyprof can produce 
 a CSV output, a columnated output (similar to `column -t` for terminal 
 readability) and a space separated output (for post processing by AWK 
@@ -130,28 +153,28 @@ in progress or the tool was unable to extract that information. Assuming
 the directory is `prof`, here are a few examples of how to use `prof.py`. ::
 
   # Print usage and help. Lists all available output columns.
-    python -m apex.pyprof.prof -h
+    python -m pyprof.prof -h
 
   # Columnated output of width 150 with some default columns.
-    python -m apex.pyprof.prof -w 150 net.dict
+    python -m pyprof.prof -w 150 net.dict
 
   # CSV output.
-    python -m apex.pyprof.prof --csv net.dict
+    python -m pyprof.prof --csv net.dict
 
   # Space seperated output.
-    python -m apex.pyprof.prof net.dict
+    python -m pyprof.prof net.dict
 
   # Columnated output of width 130 with columns index,direction,kernel name,parameters,silicon time.
-    python -m apex.pyprof.prof -w 130 -c idx,dir,kernel,params,sil net.dict
+    python -m pyprof.prof -w 130 -c idx,dir,kernel,params,sil net.dict
 
   # CSV output with columns index,direction,kernel name,parameters,silicon time.
-    python -m apex.pyprof.prof --csv -c idx,dir,kernel,params,sil net.dict
+    python -m pyprof.prof --csv -c idx,dir,kernel,params,sil net.dict
 
   # Space separated output with columns index,direction,kernel name,parameters,silicon time.
-    python -m apex.pyprof.prof -c idx,dir,kernel,params,sil net.dict
+    python -m pyprof.prof -c idx,dir,kernel,params,sil net.dict
 
   # Input redirection.
-    python -m apex.pyprof.prof < net.dict
+    python -m pyprof.prof < net.dict
 
 .. csv-table:: Options for prof.py
   :header: "Command", "Description"
@@ -204,7 +227,7 @@ you may see the following message when trying to run nvprof:
 
 **_ERR_NVGPUCTRPERM The user running <tool_name/application_name> does not have permission to access NVIDIA GPU Performance Counters on the target device._**
 
-For details, see here <https://developer.nvidia.com/nvidia-development-tools-solutions-ERR_NVGPUCTRPERM-permission-issue-performance-counters> _.
+For details, see `here <https://developer.nvidia.com/nvidia-development-tools-solutions-ERR_NVGPUCTRPERM-permission-issue-performance-counters>`_.
 
 *Permanent solution*
 
