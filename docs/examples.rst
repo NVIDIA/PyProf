@@ -33,7 +33,7 @@ Run nsight systems to profile the network. ::
 
 Parse the resulting lenet.sqlite database. ::
 
-  $ python -m pyprof.parse lenet.sql > lenet.dict
+  $ python -m pyprof.parse lenet.sqlite > lenet.dict
 
 Run the prof script on the resulting dictionary. ::
 

@@ -56,7 +56,7 @@ Profile with NVProf or Nsight Systems to generate a SQL file. ::
 
 Run the parse.py script to generate the dictionary. ::
   
-  $ python -m pyprof.parse net.sql > net.dict
+  $ python -m pyprof.parse net.sqlite > net.dict
 
 Run the prof.py script to generate the reports. ::
 

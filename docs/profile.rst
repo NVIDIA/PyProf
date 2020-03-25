@@ -139,7 +139,7 @@ is a python dictionary which contains information about the kernel name,
 duration, parameters etc. This file can be used as input to other custom
 scripts as well. **Note:** Nsys will create a file called net.sqlite. ::
 
-    python -m pyprof.parse net.sql > net.dict
+    python -m pyprof.parse net.sqlite > net.dict
    
 Run the prof script
 -------------------
