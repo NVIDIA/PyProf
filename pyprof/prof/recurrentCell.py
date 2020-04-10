@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from collections import OrderedDict
+from .tc import TC_Whitelist
 from .utility import Utility
 from .base import OperatorLayerBase
 
@@ -102,7 +103,9 @@ class RNNCell(OperatorLayerBase):
 
     def tc(self):
         if "gemm" in self.name:
-            return 1 if "884gemm" in self.name else 0
+            if self.name in TC_Whitelist():
+                return 1
+            return 0
         else:
             return "-"
 

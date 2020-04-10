@@ -16,11 +16,10 @@
 # limitations under the License.
 
 from collections import OrderedDict
+from .tc import TC_Whitelist
 from .utility import Utility
 from .base import OperatorLayerBase
 import numpy as np
-
-TC_GEMMS = ["884gemm", "1688gemm"]
 
 
 class Addmm(OperatorLayerBase):
@@ -85,9 +84,8 @@ class Addmm(OperatorLayerBase):
         return
 
     def tc(self):
-        for s in TC_GEMMS:
-            if s in self.name:
-                return 1
+        if self.name in TC_Whitelist():
+            return 1
         return 0
 
     def bytes(self):
@@ -146,9 +144,8 @@ class Bmm(OperatorLayerBase):
         self.name = d.name
 
     def tc(self):
-        for s in TC_GEMMS:
-            if s in self.name:
-                return 1
+        if self.name in TC_Whitelist():
+            return 1
         return 0
 
     def params(self):
@@ -282,9 +279,8 @@ class Matmul(OperatorLayerBase):
         if self.name in Matmul.NON_TC:
             return "-"
         else:
-            for s in TC_GEMMS:
-                if s in self.name:
-                    return 1
+            if self.name in TC_Whitelist():
+                return 1
             return 0
 
     def bytes(self):
@@ -348,9 +344,8 @@ class Mm(OperatorLayerBase):
         return p
 
     def tc(self):
-        for s in TC_GEMMS:
-            if s in self.name:
-                return 1
+        if self.name in TC_Whitelist():
+            return 1
         return 0
 
     def bytes(self):
