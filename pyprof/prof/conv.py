@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from collections import OrderedDict
+from .tc import TC_Whitelist
 from .utility import Utility
 from .base import OperatorLayerBase
 
@@ -260,9 +261,8 @@ class Conv(OperatorLayerBase):
         return f
 
     def tc(self):
-        for s in ["884cudnn", "1688cudnn"]:
-            if s in self.name:
-                return 1
+        if self.name in TC_Whitelist():
+            return 1
         return "-"
 
     def op(self):
