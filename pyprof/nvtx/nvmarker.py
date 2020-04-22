@@ -68,15 +68,25 @@ def isfunc(mod, f):
     return ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr)
 
 
-def traceMarker(stack):
-    d = {}
-    cadena = []
-    for i in range(len(stack) - 1):
-        fi = stack[i]
-        t = "{}:{}".format(fi.filename, fi.lineno)
-        cadena.append(t)
-    d['traceMarker'] = cadena
-    return str(d)
+def push_nvtx_tracemarker():
+
+    def traceMarker(stack):
+        d = {}
+        cadena = []
+        
+        # minus 2 to ignore this call and the push_nvtx_tracemarker parent call
+        for i in range(len(stack) - 2):
+            fi = stack[i]
+            t = "{}:{}".format(fi.filename, fi.lineno)
+            cadena.append(t)
+        d['traceMarker'] = cadena
+        return str(d)
+
+    # Extract the stacktrace
+    stack = traceback.extract_stack()
+
+    # Push trace marker
+    nvtx.range_push(traceMarker(stack))
 
 
 def modMarker(mod, fn_name, args):
@@ -104,11 +114,7 @@ def add_wrapper(mod, fn_name):
 
     def wrapper_func(*args, **kwargs):
 
-        # Extract the stacktrace
-        stack = traceback.extract_stack()
-
-        # Push trace marker
-        nvtx.range_push(traceMarker(stack))
+        push_nvtx_tracemarker()
 
         # Push module marker
         if s:
@@ -234,9 +240,7 @@ def patchClass(cls):
         if isfunc(cls, f):
             add_wrapper(cls, f)
 
-
-def init():
-    print("Initializing NVTX monkey patches")
+def patch_torch_classes():
     for cls in [
             torch,
             torch.Tensor,
@@ -244,8 +248,51 @@ def init():
     ]:
         patchClass(cls)
 
+def patch_torch_nn_forward_functions():
     for cls in [torch.nn.RNN, torch.nn.RNNCell, torch.nn.LSTM, torch.nn.LSTMCell, torch.nn.GRU, torch.nn.GRUCell]:
         if isfunc(cls, 'forward'):
             add_wrapper(cls, 'forward')
+
+def patch_dataloader():
+    mod = torch.utils.data.dataloader
+    old_iter = mod.DataLoader.__iter__
+
+    def new_iter(self, *args, **kwargs):
+
+        push_nvtx_tracemarker()
+
+        # First pass is for creating the dataloader + returning the first data
+        cadena = argMarker(mod, "DataLoader", args, kwargs)
+        nvtx.range_push(cadena)
+
+        for x in old_iter(self, *args, **kwargs):
+
+            # Pop tracemarker
+            nvtx.range_pop();           
+            
+            # Dataloader stop, Model start
+            nvtx.range_pop() 
+
+            yield x
+           
+            push_nvtx_tracemarker()
+    
+            # Model stop, dataloader start
+            cadena = argMarker(mod, "DataLoader", args, kwargs)
+            nvtx.range_push(cadena)
+        
+        # Pop the last iteration before returning
+        nvtx.range_pop()
+        nvtx.range_pop()
+    
+    mod.DataLoader.__iter__ = new_iter
+
+
+def init():
+    print("Initializing NVTX monkey patches")
+
+    patch_dataloader()
+    patch_torch_classes()
+    patch_torch_nn_forward_functions()
 
     print("Done with NVTX monkey patching")
