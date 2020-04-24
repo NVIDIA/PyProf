@@ -27,7 +27,7 @@ class Utility(object):
 
     @staticmethod
     def typeToBytes(t):
-        if (t in ["uint8", "int8", "byte", "char"]):
+        if (t in ["uint8", "int8", "byte", "char", "bool"]):
             return 1
         elif (t in ["float16", "half", "int16", "short"]):
             return 2
@@ -66,6 +66,10 @@ class Utility(object):
                 "double",
         ]):
             return "fp64"
+        elif (t in [
+                "bool",
+        ]):
+            return "bool"
         assert False
 
     @staticmethod

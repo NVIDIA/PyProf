@@ -14,22 +14,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+'''
+This is a test script to run the L0 tests.
+'''
+import unittest
+import sys
 
-from setuptools import setup, find_packages
+test_dirs = ["run_pyprof_nvtx", "run_pyprof_data"]
 
-with open('requirements.txt', 'r') as f:
-    required = f.read().splitlines()
+runner = unittest.TextTestRunner(verbosity=2)
 
-setup(
-    name='pyprof',
-    version='0.1',
-    packages=find_packages(),
-    author="Aditya Agrawal,Marek Kolodziej",
-    author_email="aditya.iitb@gmail.com,mkolod@gmail.com",
-    maintainer="Elias Bermudez",
-    maintainer_email="dbermudez13@gmail.com",
-    url="https://github.com/NVIDIA/PyProf",
-    license="BSD 3-Clause License",
-    description='Pytorch profiler written by NVIDIA',
-    install_requires=required,
-)
+errcode = 0
+
+for test_dir in test_dirs:
+    suite = unittest.TestLoader().discover(test_dir)
+
+    print("\nExecuting tests from " + test_dir)
+
+    result = runner.run(suite)
+
+    if not result.wasSuccessful():
+        errcode = 1
+
+sys.exit(errcode)
