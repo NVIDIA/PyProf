@@ -20,9 +20,12 @@ from setuptools import setup, find_packages
 with open('requirements.txt', 'r') as f:
     required = f.read().splitlines()
 
+with open('VERSION', 'r') as f:
+    version = f.read()
+
 setup(
     name='pyprof',
-    version='0.1',
+    version=version,
     packages=find_packages(),
     author="Aditya Agrawal,Marek Kolodziej",
     author_email="aditya.iitb@gmail.com,mkolod@gmail.com",
@@ -30,6 +33,6 @@ setup(
     maintainer_email="dbermudez13@gmail.com",
     url="https://github.com/NVIDIA/PyProf",
     license="BSD 3-Clause License",
-    description='Pytorch profiler written by NVIDIA',
+    description='NVIDIA Pytorch Profiler',
     install_requires=required,
 )
