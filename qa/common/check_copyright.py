@@ -23,7 +23,8 @@ SKIP_EXTS = ('jpeg', 'jpg', 'pgm', 'png',
              'log', 'serverlog',
              'preprocessed', 'jmx', 'gz',
              'caffemodel', 'json')
-SKIP_PATHS = ('LICENSE',
+SKIP_PATHS = ('requirements.txt',
+              'LICENSE',
               'VERSION')
 
 COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9]), NVIDIA CORPORATION. All rights reserved.'
@@ -65,6 +66,7 @@ def visit(path):
 
     with open(path, 'r') as f:
         first_line = True
+        second_line = True
         line = None
         try:
             for fline in f:
@@ -76,6 +78,11 @@ def visit(path):
                     first_line = False
                     if (fline.startswith("#!") or fline.startswith("..") or
                         fline.startswith("<!--")  or fline.startswith("{{/*")):
+                        continue
+                # Skip any '# -*-' liines as the second line
+                if second_line:
+                    second_line = False
+                    if (fline.startswith("# -*-")):
                         continue
                 # Skip empty lines...
                 if len(fline.strip()) != 0:
