@@ -18,9 +18,6 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **LATEST RELEASE: You are currently working on the master branch which
-    tracks under-development progress towards the next release.**
-
 .. overview-begin-marker-do-not-remove
 
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
@@ -28,6 +25,19 @@ models. PyProf aggregates kernel performance from `Nsight Systems
 <https://developer.nvidia.com/nsight-systems>`_ or `NvProf
 <https://developer.nvidia.com/nvidia-visual-profiler>`_ and provides the 
 following additional features:
+
+What's New in 3.0.0
+-------------------
+
+* Created a brand new repository and home for `PyProf  
+  <https://github.com/NVIDIA/PyProf>`_.
+
+* Add support for Nsight System.
+
+* Added TensorCore usage data in PyProf results.
+
+Features
+--------
 
 * Identifies the layer that launched a kernel: e.g. the association of 
   `ComputeOffsetsKernel` with a concrete PyTorch layer or API is not obvious.
@@ -51,13 +61,10 @@ following additional features:
 
 .. overview-end-marker-do-not-remove
 
-TODO: add release information here
-
-Documentation
--------------
-
-TODO: add links to Documentation
-* `Installation <https://github.com/NVIDIA/PyProf/blob/master/docs/install.rst>` _.
+The current release of PyProf is 3.0.0 and corresponds to the 20.05 release of
+the PyTorch container on `NVIDIA GPU Cloud (NGC) <https://ngc.nvidia.com>`_. The
+branch for this release is `r20.05 
+<https://github.com/NVIDIA/PyProf/tree/r20.05>`_. 
 
 Contributing
 ------------
