@@ -39,6 +39,7 @@ import numpy
 import inspect as ins
 import traceback
 import math
+import sys
 
 
 def isfunc(mod, f):
@@ -247,5 +248,16 @@ def init():
     for cls in [torch.nn.RNN, torch.nn.RNNCell, torch.nn.LSTM, torch.nn.LSTMCell, torch.nn.GRU, torch.nn.GRUCell]:
         if isfunc(cls, 'forward'):
             add_wrapper(cls, 'forward')
+
+    # Patch nvidia apex library only if imported
+    if 'apex' in sys.modules:
+        print("Patching apex")
+        patchClass(sys.modules['apex'])
+
+    # Patch nvidia dali library only if imported
+    for mod in sys.modules:
+        if 'nvidia.dali' in mod:
+            print(f'Patching {mod}')
+            patchClass(sys.modules[mod])
 
     print("Done with NVTX monkey patching")
