@@ -68,14 +68,57 @@ def isfunc(mod, f):
     return ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr)
 
 
-def traceMarker(stack):
+def traceMarker():
+    # Returns a string representing the stack of function calls separated with '/'
+    #
+    def get_func_stack():
+        func_stack = ""
+        ins_stack = ins.stack()
+
+        # Starting at index of 3 to ignore this function, it's parent (traceMarker) and it's parent (wrapper_func)
+        #
+        for i in range(3, len(ins_stack)):
+            frame = ins_stack[i]
+            fn_name = frame[0].f_code.co_name
+            frame_info = ""
+
+            # __call__:  Much of Torch library is implemented in this way. Ignore these extra layers
+            # wrapper_func: Is a function in this file. If there are nested monkeypatched functions we don't want it to show up
+            #
+            if (fn_name in ["__call__","wrapper_func"]):
+                continue
+
+            # Grab class name if it exists
+            #
+            if 'self' in frame[0].f_locals:
+                cls_name = frame[0].f_locals['self'].__class__.__name__
+                frame_info += cls_name + "::"
+
+            frame_info += fn_name
+
+            # Prepend this frame's info into the function stack
+            #
+            func_stack = '/' + frame_info + func_stack
+
+        return func_stack
+
+    # Return a trace marker string
+    #
+    def get_trace_marker():
+        cadena = []
+        stack = traceback.extract_stack()
+        
+        # Starting at index of 3 to ignore this function, it's parent (traceMarker) and it's parent (wrapper_func)
+        #
+        for i in range(len(stack) - 3):
+            fi = stack[i]
+            t = "{}:{}".format(fi.filename, fi.lineno)
+            cadena.append(t)
+        return cadena
+
     d = {}
-    cadena = []
-    for i in range(len(stack) - 1):
-        fi = stack[i]
-        t = "{}:{}".format(fi.filename, fi.lineno)
-        cadena.append(t)
-    d['traceMarker'] = cadena
+    d['traceMarker'] = get_trace_marker()
+    d['funcStack'] = get_func_stack()
     return str(d)
 
 
@@ -104,11 +147,8 @@ def add_wrapper(mod, fn_name):
 
     def wrapper_func(*args, **kwargs):
 
-        # Extract the stacktrace
-        stack = traceback.extract_stack()
-
         # Push trace marker
-        nvtx.range_push(traceMarker(stack))
+        nvtx.range_push(traceMarker())
 
         # Push module marker
         if s:
