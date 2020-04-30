@@ -24,8 +24,8 @@ RET=0
 
 set +e
 
-(cd /opt/pytorch/pyprof/L0_nvtx/ && \
-        python test_pyprof_nvtx.py) > $TEST_LOG 2>&1
+(cd /opt/pytorch/pyprof/qa/L0_nvtx/ && \
+        ./test_pyprof_nvtx.py) > $TEST_LOG 2>&1
 if [ $? -ne 0 ]; then
     RET=1
 fi
