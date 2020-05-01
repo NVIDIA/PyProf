@@ -22,10 +22,7 @@ apt-get update && \
 rm -f $TEST_LOG
 RET=0
 
-set +e
-
-(cd /opt/pytorch/pyprof/qa/L0_nvtx/ && \
-        ./test_pyprof_nvtx.py) > $TEST_LOG 2>&1
+./test_pyprof_nvtx.py > $TEST_LOG 2>&1
 if [ $? -ne 0 ]; then
     RET=1
 fi
