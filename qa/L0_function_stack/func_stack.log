@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "./test_pyprof_func_stack.py", line 24, in <module>
+    class TestPyProfFuncStack(unittest.TestCase):
+NameError: name 'unittest' is not defined
