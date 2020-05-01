@@ -120,7 +120,7 @@ def run_tests(test_name):
     suite = unittest.TestSuite()
     for test_case in test_cases:
         suite.addTest(TestPyProfData(test_case))
-    unittest.TextTestRunner().run(suite)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
 if __name__ == '__main__':
