@@ -68,6 +68,8 @@ def isfunc(mod, f):
     return ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr)
 
 
+# Returns a dict string with a tracemarker and function stack in it
+#
 def traceMarker():
     # Returns a string representing the stack of function calls separated with '/'
     #
@@ -274,9 +276,9 @@ def patchClass(cls):
         if isfunc(cls, f):
             add_wrapper(cls, f)
 
-
-def init():
-    print("Initializing NVTX monkey patches")
+# Monkey-patch all classes in torch
+#
+def patch_torch_classes():
     for cls in [
             torch,
             torch.Tensor,
@@ -284,8 +286,59 @@ def init():
     ]:
         patchClass(cls)
 
+
+# Monkey-patch all forward functions in torch.nn libraries
+#
+def patch_torch_nn_forward_functions():
     for cls in [torch.nn.RNN, torch.nn.RNNCell, torch.nn.LSTM, torch.nn.LSTMCell, torch.nn.GRU, torch.nn.GRUCell]:
         if isfunc(cls, 'forward'):
             add_wrapper(cls, 'forward')
+
+
+# Monkey-patch the dataloader in torch.utils.data
+#
+def patch_dataloader():
+    mod = torch.utils.data.dataloader
+    old_iter = mod.DataLoader.__iter__
+
+    def new_iter(self, *args, **kwargs):
+
+        # Push trace marker
+        nvtx.range_push(traceMarker())
+
+        # First pass is for creating the dataloader + returning the first data
+        cadena = argMarker(mod, "DataLoader", args, kwargs)
+        nvtx.range_push(cadena)
+
+        for x in old_iter(self, *args, **kwargs):
+
+            # Pop tracemarker
+            nvtx.range_pop();           
+
+            # Dataloader stop, Model start
+            nvtx.range_pop() 
+
+            yield x
+
+            # Push trace marker
+            nvtx.range_push(traceMarker())
+
+            # Model stop, dataloader start
+            cadena = argMarker(mod, "DataLoader", args, kwargs)
+            nvtx.range_push(cadena)
+
+        # Pop the last iteration before returning
+        nvtx.range_pop()
+        nvtx.range_pop()
+
+    mod.DataLoader.__iter__ = new_iter
+
+
+def init():
+    print("Initializing NVTX monkey patches")
+
+    patch_dataloader()
+    patch_torch_classes()
+    patch_torch_nn_forward_functions()
 
     print("Done with NVTX monkey patching")
