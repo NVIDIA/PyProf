@@ -86,8 +86,9 @@ def traceMarker():
 
             # __call__:  Much of Torch library is implemented in this way. Ignore these extra layers
             # wrapper_func: Is a function in this file. If there are nested monkeypatched functions we don't want it to show up
+            # <module>: Just the top level module. Doesn't add any information and if it exists in any html it breaks it
             #
-            if (fn_name in ["__call__","wrapper_func"]):
+            if (fn_name in ["__call__","wrapper_func","<module>"]):
                 continue
 
             # Grab class name if it exists
