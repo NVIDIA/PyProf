@@ -51,13 +51,15 @@ following additional features:
 
 .. overview-end-marker-do-not-remove
 
-TODO: add release information here
-
 Documentation
 -------------
 
-TODO: add links to Documentation
-* `Installation <https://github.com/NVIDIA/PyProf/blob/master/docs/install.rst>` _.
+The User Guide can be found in the 
+`PyProf docs folder <https://github.com/NVIDIA/PyProf/blob/master/docs>`_, and 
+provides instructions on how to install and profile with PyProf.
+
+An `FAQ <https://github.com/NVIDIA/PyProf/blob/master/docs/faqs.rst>`_ provides
+answers for frequently asked questions.
 
 Contributing
 ------------
