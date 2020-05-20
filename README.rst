@@ -18,16 +18,25 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **LATEST RELEASE: You are currently working on the master branch which
-    tracks under-development progress towards the next release.**
+    **PRE-RELEASE: You are currently on the r20.06 branch which tracks
+    stabilization towards the new release.**
 
 .. overview-begin-marker-do-not-remove
 
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
 models. PyProf aggregates kernel performance from `Nsight Systems
 <https://developer.nvidia.com/nsight-systems>`_ or `NvProf
-<https://developer.nvidia.com/nvidia-visual-profiler>`_ and provides the 
-following additional features:
+<https://developer.nvidia.com/nvidia-visual-profiler>`_.
+
+What's New in 3.1.0
+-------------------
+
+* Improved NVTX functionality and coverage.
+
+* Add support required by `NVIDIA Deep Learning Profiler <https://docs.nvidia.com/deeplearning/frameworks/dlprof-user-guide/>`_.
+
+Features
+--------
 
 * Identifies the layer that launched a kernel: e.g. the association of 
   `ComputeOffsetsKernel` with a concrete PyTorch layer or API is not obvious.
@@ -51,13 +60,20 @@ following additional features:
 
 .. overview-end-marker-do-not-remove
 
-TODO: add release information here
+The current release of PyProf is 3.1.0 and is available in the 20.06 release of
+the PyTorch container on `NVIDIA GPU Cloud (NGC) <https://ngc.nvidia.com>`_. The 
+branch for this release is `r20.06
+<https://github.com/NVIDIA/PyProf/tree/r20.06>`_.
 
 Documentation
 -------------
 
-TODO: add links to Documentation
-* `Installation <https://github.com/NVIDIA/PyProf/blob/master/docs/install.rst>` _.
+The User Guide can be found in the 
+`PyProf docs folder <https://github.com/NVIDIA/PyProf/blob/master/docs>`_, and 
+provides instructions on how to install and profile with PyProf.
+
+An `FAQ <https://github.com/NVIDIA/PyProf/blob/master/docs/faqs.rst>`_ provides
+answers for frequently asked questions.
 
 Contributing
 ------------
