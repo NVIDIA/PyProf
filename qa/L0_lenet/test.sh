@@ -19,6 +19,8 @@ TEST_LOG="./data.log"
 rm -f $TEST_LOG
 RET=0
 
+set +e
+
 ./test_lenet.py > $TEST_LOG 2>&1
 if [ $? -ne 0 ]; then
     RET=1
