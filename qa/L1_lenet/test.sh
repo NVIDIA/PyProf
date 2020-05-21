@@ -16,9 +16,6 @@
 TEST_LOG="./data.log"
 
 
-apt-get update && \
-    apt-get install -y --no-install-recommends python
-
 rm -f $TEST_LOG
 RET=0
 
