@@ -61,7 +61,7 @@ class TestPyprofWithLenet(unittest.TestCase):
 
     def test_run_profile(self):
         lenet_csv = "./lenet.csv"
-        command = "python -m pyprof.prof --csv lenet.dict -c idx,dir,sub,mod,op,kernel,params,sil,tc"
+        command = "python -m pyprof.prof --csv lenet.dict"
         command_tokens = command.split()
         with open(lenet_csv, "w") as f:
             ret_val = subprocess.run(command_tokens, stdout=f)
