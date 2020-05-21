@@ -72,6 +72,7 @@ class TestPyprofWithLenet(unittest.TestCase):
 
         directions = ["bprop", "fprop"]
         ops = [
+            "",  # covers the "reduce_kernel" kernel, op will be an empty string in the report
             "add_",
             "backward",
             "conv2d",
