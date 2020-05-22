@@ -75,6 +75,7 @@ class TestPyprofWithLenet(unittest.TestCase):
             "",  # covers the "reduce_kernel" kernel, op will be an empty string in the report
             "add_",
             "backward",
+            "bias",
             "conv2d",
             "linear",
             "max_pool2d",
