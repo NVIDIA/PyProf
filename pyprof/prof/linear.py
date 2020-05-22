@@ -32,7 +32,7 @@ class Linear(OperatorLayerBase):
     gemmKernels = ["gemm", "gemv", "dot_kernel", "splitKreduce_kernel", "reduce_1Block_kernel"]
     biasKernels = [
         "kernelReduceContigDim", "kernelReduceNoncontigDim_shared", "elementwise_kernel", "reduce_kernel",
-        "kernelPointwiseApply2"
+        "kernelPointwiseApply2", "2d_grouped_direct_kernel"
     ]
 
     def setXWBMNK(self, args):
@@ -107,7 +107,7 @@ class Linear(OperatorLayerBase):
         if any(x in d.name for x in Linear.gemmKernels):
             self.op_ = "linear"
         else:
-            assert any(x in d.name for x in Linear.biasKernels)
+            assert any(x in d.name for x in Linear.biasKernels), f"Kernel data: {d}"
             self.op_ = "bias"
         '''
 		elif (("kernelPointwiseApply2" in d.name) or ("kernelReduceContigDim" in d.name) or ("kernelReduceNoncontigDim_shared" in d.name)):

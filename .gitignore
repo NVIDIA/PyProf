@@ -1,5 +1,7 @@
 __pycache__
 *.sql
 *.sqlite
+*.qdrep
 *.dict
 *.csv
+*.log
