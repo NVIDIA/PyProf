@@ -32,5 +32,5 @@ Installing from GitHub
     * pip install .
 
     * verify installation is complete via:  ``pip list | grep pyprof``. 
-        # it should display ``pyprof 0.1``
+        # it should reflect the version number `here <https://github.com/NVIDIA/PyProf/blob/master/VERSION>`_
     
