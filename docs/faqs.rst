@@ -25,6 +25,7 @@ PyProf FAQs
 	pyprof.nvtx.wrap(fused_adam_cuda, 'adam')
 
 #. If you are using JIT and/or AMP, the correct initialization sequence is
+
 	#. Let any JIT to finish.
 	#. Initlialize pyprof ``pyprof.init()``.
 	#. Initialize AMP.
