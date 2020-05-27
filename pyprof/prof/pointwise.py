@@ -159,6 +159,7 @@ class Pointwise(OperatorLayerBase):
             _, t1, s1, dt1 = Pointwise.foo(in1)
             assert (t0 == t1 == "tensor")
             # TODO: review assertions given that dtypes do not need to be equal
+            # tracked here: https://github.com/NVIDIA/PyProf/issues/26
             # assert (dt0 == dt1)
             self.shape = [s0, s1]
             self.type = dt0
