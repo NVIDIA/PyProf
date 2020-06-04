@@ -334,6 +334,21 @@ def patch_dataloader():
 
     mod.DataLoader.__iter__ = new_iter
 
+# Monkey-patch functions in APEX
+#
+def patch_apex():
+    import importlib
+    if importlib.util.find_spec("amp_C") is not None:
+        import amp_C
+        patchClass(amp_C)
+
+    if importlib.util.find_spec("fused_adam_cuda") is not None:
+        import fused_adam_cuda
+        patchClass(fused_adam_cuda)
+
+    if importlib.util.find_spec("fused_layer_norm_cuda") is not None:
+        import fused_layer_norm_cuda
+        patchClass(fused_layer_norm_cuda)
 
 def init():
     print("Initializing NVTX monkey patches")
@@ -341,5 +356,6 @@ def init():
     patch_dataloader()
     patch_torch_classes()
     patch_torch_nn_forward_functions()
+    patch_apex()
 
     print("Done with NVTX monkey patching")
