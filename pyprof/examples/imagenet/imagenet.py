@@ -238,7 +238,6 @@ def main():
     args = parseArgs()
 
     pyprof.init()
-    #	pyprof.nvtx.wrap(fused_adam_cuda, 'adam')
 
     N = args.b
     C = 3
