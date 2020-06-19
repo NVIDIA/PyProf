@@ -372,9 +372,7 @@ def patch_dataloader_init():
         pin_memory = kwargs.get("pin_memory", False)
 
         push_nvtx_model_config({"num_workers": num_workers, "pin_memory": pin_memory})
-
         old_init(self, *args, **kwargs)
-
         nvtx.range_pop()
 
     mod.DataLoader.__init__ = new_init
@@ -399,7 +397,6 @@ def patch_with_always_benchmark(mod, fn_name):
         add_nvtx = not torch.backends.cudnn.benchmark and not cudnn_benchmark_disabled_reported
         if (add_nvtx):
             cudnn_benchmark_disabled_reported = True
-
             push_nvtx_model_config({"cudnn_benchmark_disabled": True})
 
         result = old_fn(*args, **kwargs)
@@ -419,13 +416,9 @@ def patch_never_call(mod, fn_name, key):
     old_fn = getattr(mod, fn_name)
 
     def wrapper_func(*args, **kwargs):
-        
         push_nvtx_model_config({key: True})
-
         result = old_fn(*args, **kwargs)
-
         nvtx.range_pop()
-        
         return result
 
     setattr(mod, fn_name, wrapper_func)
@@ -468,21 +461,22 @@ def patch_never_call_with_args(mod, fn_name, key, bad_args):
 def patch_model_configs():
     patch_dataloader_init()
 
-    patch_never_call_with_args(torch.autograd.profiler.profile, "__init__", "profile", {"enabled": {True}})
-    patch_never_call_with_args(torch.autograd.set_detect_anomaly, "__init__", "detect_anomaly", {"mode": {True}})
-    patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
-
-    patch_never_call(torch.autograd.detect_anomaly, "__init__", "detect_anomaly")
-    patch_never_call(torch.autograd, "gradcheck", "gradcheck")
-    patch_never_call(torch.autograd, "gradgradcheck", "gradgradcheck")
-    patch_never_call(torch.autograd.profiler.record_function, "__init__", "record_function")
-
     patch_with_always_benchmark(torch.nn.functional, "conv1d")
     patch_with_always_benchmark(torch.nn.functional, "conv2d")
     patch_with_always_benchmark(torch.nn.functional, "conv3d")
     patch_with_always_benchmark(torch.nn.functional, "conv_transpose1d")
     patch_with_always_benchmark(torch.nn.functional, "conv_transpose2d")
     patch_with_always_benchmark(torch.nn.functional, "conv_transpose3d")
+
+    patch_never_call(torch.autograd.detect_anomaly, "__init__", "detect_anomaly")
+    patch_never_call(torch.autograd, "gradcheck", "gradcheck")
+    patch_never_call(torch.autograd, "gradgradcheck", "gradgradcheck")
+    patch_never_call(torch.autograd.profiler.record_function, "__init__", "record_function")
+
+    patch_never_call_with_args(torch.autograd.profiler.profile, "__init__", "profile", {"enabled": {True}})
+    patch_never_call_with_args(torch.autograd.set_detect_anomaly, "__init__", "detect_anomaly", {"mode": {True}})
+    patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
+
 
 def init():
     print("Initializing NVTX monkey patches")
