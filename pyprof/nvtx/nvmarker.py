@@ -39,7 +39,7 @@ import numpy
 import inspect as ins
 import traceback
 import math
-
+import json
 
 def isfunc(mod, f):
     assert hasattr(mod, f)
@@ -350,6 +350,140 @@ def patch_apex():
         import fused_layer_norm_cuda
         patchClass(fused_layer_norm_cuda)
 
+
+# Helper function to dump the passed in dict config as an nvtx
+# marker with "model_config" key
+#
+def push_nvtx_model_config(config):
+    nvtx_msg = json.dumps({"model_config": config})
+    nvtx.range_push(nvtx_msg)
+
+
+# Capture dataloader config (num_workers and pin_memory) and
+# emit a model_config nvtx range with the information
+#
+def patch_dataloader_init():
+    mod = torch.utils.data.dataloader
+    old_init = mod.DataLoader.__init__
+
+    def new_init(self, *args, **kwargs):
+
+        num_workers = kwargs.get("num_workers",0)
+        pin_memory = kwargs.get("pin_memory", False)
+
+        push_nvtx_model_config({"num_workers": num_workers, "pin_memory": pin_memory})
+
+        old_init(self, *args, **kwargs)
+
+        nvtx.range_pop()
+
+    mod.DataLoader.__init__ = new_init
+
+
+# Flag to indicate that cudnn_benchmark_disabled has already been reported
+#
+global cudnn_benchmark_disabled_reported
+cudnn_benchmark_disabled_reported = False
+
+# Path the given mod/function so that if it is ever executed and 
+# torch.backends.cudnn.benchmark is not true, it will emit an nvtx
+# range to report that fact
+#
+def patch_with_always_benchmark(mod, fn_name):
+    assert isfunc(mod, fn_name)
+    old_fn = getattr(mod, fn_name)
+
+    def always_benchmark_wrapper(*args, **kwargs):
+        global cudnn_benchmark_disabled_reported
+
+        add_nvtx = not torch.backends.cudnn.benchmark and not cudnn_benchmark_disabled_reported
+        if (add_nvtx):
+            cudnn_benchmark_disabled_reported = True
+
+            push_nvtx_model_config({"cudnn_benchmark_disabled": True})
+
+        result = old_fn(*args, **kwargs)
+
+        if (add_nvtx):
+            nvtx.range_pop()
+
+        return result
+
+    setattr(mod, fn_name, always_benchmark_wrapper)
+
+
+# Patch the given mod/function. If the function is executed, emit 
+# an nvtx_range with data indicating that 'key' was true
+#
+def patch_never_call(mod, fn_name, key):
+    old_fn = getattr(mod, fn_name)
+
+    def wrapper_func(*args, **kwargs):
+        
+        push_nvtx_model_config({key: True})
+
+        result = old_fn(*args, **kwargs)
+
+        nvtx.range_pop()
+        
+        return result
+
+    setattr(mod, fn_name, wrapper_func)
+
+
+# Patch the given mod/function. If the function is executed 
+# and any of the bad args have any of the listed bad values, 
+# emit an nvtx_range with data indicating that 'key' was true
+#
+def patch_never_call_with_args(mod, fn_name, key, bad_args):
+    old_fn = getattr(mod, fn_name)
+
+    def wrapper_func(*args, **kwargs):
+
+        signature = ins.signature(old_fn)
+        bound = signature.bind(*args, **kwargs)
+        bound.apply_defaults()
+
+        problem = False
+        for k,v in bound.arguments.items():
+            if (k in bad_args):
+                if (v in bad_args[k]):
+                    problem = True
+
+        if (problem):
+            push_nvtx_model_config({key: True})
+
+        result = old_fn(*args, **kwargs)
+
+        if (problem):
+            nvtx.range_pop()
+
+        return result
+
+    setattr(mod, fn_name, wrapper_func)
+
+# Patch functions that help gather high-level configuration options for the model.
+# All resulting nvtx ranges will have 'model_config' as the primary key
+#
+def patch_model_configs():
+    patch_dataloader_init()
+
+    patch_never_call_with_args(torch.autograd.profiler.profile, "__init__", "profile", {"enabled": {True}})
+    patch_never_call_with_args(torch.autograd.set_detect_anomaly, "__init__", "detect_anomaly", {"mode": {True}})
+    patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
+
+    patch_never_call(torch.autograd.detect_anomaly, "__init__", "detect_anomaly")
+    patch_never_call(torch.autograd, "gradcheck", "gradcheck")
+    patch_never_call(torch.autograd, "gradgradcheck", "gradgradcheck")
+    patch_never_call(torch.autograd.profiler.record_function, "__init__", "record_function")
+
+    patch_with_always_benchmark(torch.nn.functional, "conv1d")
+    patch_with_always_benchmark(torch.nn.functional, "conv2d")
+    patch_with_always_benchmark(torch.nn.functional, "conv3d")
+    patch_with_always_benchmark(torch.nn.functional, "conv_transpose1d")
+    patch_with_always_benchmark(torch.nn.functional, "conv_transpose2d")
+    patch_with_always_benchmark(torch.nn.functional, "conv_transpose3d")
+
 def init():
     print("Initializing NVTX monkey patches")
 
@@ -357,5 +491,6 @@ def init():
     patch_torch_classes()
     patch_torch_nn_forward_functions()
     patch_apex()
+    patch_model_configs()
 
     print("Done with NVTX monkey patching")
