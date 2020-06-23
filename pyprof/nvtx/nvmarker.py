@@ -277,9 +277,8 @@ def patchClass(cls):
         if isfunc(cls, f):
             add_wrapper(cls, f)
 
-# Monkey-patch all classes in torch
-#
 def patch_torch_classes():
+    """Monkey-patch all classes in torch"""
     for cls in [
             torch,
             torch.Tensor,
@@ -288,17 +287,15 @@ def patch_torch_classes():
         patchClass(cls)
 
 
-# Monkey-patch all forward functions in torch.nn libraries
-#
 def patch_torch_nn_forward_functions():
+    """Monkey-patch all forward functions in torch.nn libraries"""
     for cls in [torch.nn.RNN, torch.nn.RNNCell, torch.nn.LSTM, torch.nn.LSTMCell, torch.nn.GRU, torch.nn.GRUCell]:
         if isfunc(cls, 'forward'):
             add_wrapper(cls, 'forward')
 
 
-# Monkey-patch the dataloader in torch.utils.data
-#
 def patch_dataloader():
+    """Monkey-patch the dataloader in torch.utils.data"""
     mod = torch.utils.data.dataloader
     old_iter = mod.DataLoader.__iter__
 
@@ -334,9 +331,8 @@ def patch_dataloader():
 
     mod.DataLoader.__iter__ = new_iter
 
-# Monkey-patch functions in APEX
-#
 def patch_apex():
+    """Monkey-patch functions in APEX"""
     import importlib
     if importlib.util.find_spec("amp_C") is not None:
         import amp_C
@@ -351,18 +347,20 @@ def patch_apex():
         patchClass(fused_layer_norm_cuda)
 
 
-# Helper function to dump the passed in dict config as an nvtx
-# marker with "model_config" key
-#
 def push_nvtx_model_config(config):
+    """
+    Helper function to dump the passed in dict config as an nvtx
+    marker with "model_config" key
+    """
     nvtx_msg = json.dumps({"model_config": config})
     nvtx.range_push(nvtx_msg)
 
 
-# Capture dataloader config (num_workers and pin_memory) and
-# emit a model_config nvtx range with the information
-#
 def patch_dataloader_init():
+    """
+    Capture dataloader config (num_workers and pin_memory) and
+    emit a model_config nvtx range with the information
+    """
     mod = torch.utils.data.dataloader
     old_init = mod.DataLoader.__init__
 
@@ -380,14 +378,14 @@ def patch_dataloader_init():
 
 # Flag to indicate that cudnn_benchmark_disabled has already been reported
 #
-global cudnn_benchmark_disabled_reported
 cudnn_benchmark_disabled_reported = False
 
-# Path the given mod/function so that if it is ever executed and 
-# torch.backends.cudnn.benchmark is not true, it will emit an nvtx
-# range to report that fact
-#
 def patch_with_always_benchmark(mod, fn_name):
+    """
+    Patch the given mod/function so that if it is ever executed and 
+    torch.backends.cudnn.benchmark is not true, it will emit an nvtx
+    range to report that fact
+    """
     assert isfunc(mod, fn_name)
     old_fn = getattr(mod, fn_name)
 
@@ -395,13 +393,13 @@ def patch_with_always_benchmark(mod, fn_name):
         global cudnn_benchmark_disabled_reported
 
         add_nvtx = not torch.backends.cudnn.benchmark and not cudnn_benchmark_disabled_reported
-        if (add_nvtx):
+        if add_nvtx:
             cudnn_benchmark_disabled_reported = True
             push_nvtx_model_config({"cudnn_benchmark_disabled": True})
 
         result = old_fn(*args, **kwargs)
 
-        if (add_nvtx):
+        if add_nvtx:
             nvtx.range_pop()
 
         return result
@@ -409,10 +407,11 @@ def patch_with_always_benchmark(mod, fn_name):
     setattr(mod, fn_name, always_benchmark_wrapper)
 
 
-# Patch the given mod/function. If the function is executed, emit 
-# an nvtx_range with data indicating that 'key' was true
-#
 def patch_never_call(mod, fn_name, key):
+    """
+    Patch the given mod/function. If the function is executed, emit 
+    an nvtx_range with data indicating that 'key' was true
+    """
     old_fn = getattr(mod, fn_name)
 
     def wrapper_func(*args, **kwargs):
@@ -424,11 +423,12 @@ def patch_never_call(mod, fn_name, key):
     setattr(mod, fn_name, wrapper_func)
 
 
-# Patch the given mod/function. If the function is executed 
-# and any of the bad args have any of the listed bad values, 
-# emit an nvtx_range with data indicating that 'key' was true
-#
 def patch_never_call_with_args(mod, fn_name, key, bad_args):
+    """
+    Patch the given mod/function. If the function is executed 
+    and any of the bad args have any of the listed bad values, 
+    emit an nvtx_range with data indicating that 'key' was true
+    """
     old_fn = getattr(mod, fn_name)
 
     def wrapper_func(*args, **kwargs):
@@ -439,26 +439,29 @@ def patch_never_call_with_args(mod, fn_name, key, bad_args):
 
         problem = False
         for k,v in bound.arguments.items():
-            if (k in bad_args):
-                if (v in bad_args[k]):
+            if k in bad_args:
+                if v in bad_args[k]:
                     problem = True
 
-        if (problem):
+        if problem:
             push_nvtx_model_config({key: True})
 
         result = old_fn(*args, **kwargs)
 
-        if (problem):
+        if problem:
             nvtx.range_pop()
 
         return result
 
     setattr(mod, fn_name, wrapper_func)
 
-# Patch functions that help gather high-level configuration options for the model.
-# All resulting nvtx ranges will have 'model_config' as the primary key
-#
+
 def patch_model_configs():
+    """
+    Patch functions that help gather high-level configuration options for the model.
+    All resulting nvtx ranges will have 'model_config' as the primary key
+    """
+
     patch_dataloader_init()
 
     patch_with_always_benchmark(torch.nn.functional, "conv1d")
