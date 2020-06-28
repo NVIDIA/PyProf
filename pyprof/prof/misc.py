@@ -214,11 +214,18 @@ class Any(OperatorLayerBase):
 
         assert (mod == "Tensor")
         assert (op == "any")
-        assert (len(args) == 1)  #could be 2 as well, the second argument is a bool
+        assert (len(args) in [1,2])
         t = args[0]
+        # The input can be a tensor or scalar
+        assert (t['type'] in ["tensor", "bool"])
 
-        self.shape = t['shape']
-        self.type = t['dtype']
+        if t['type'] == "tensor":
+          self.shape = t['shape']
+          self.type = t['dtype']
+        else:
+          self.shape = (1,)
+          self.type = t['type']
+          
         self.sub = d.sub
         return
 
