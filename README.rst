@@ -19,7 +19,9 @@ PyProf - PyTorch Profiling tool
 ===============================
 
     **LATEST RELEASE: You are currently working on the master branch which
-    tracks under-development progress towards the next release.**
+    tracks under-development progress towards the next release. The
+    latest release of the PyProf is 3.1.0 and is available on branch** `r20.06
+    <https://github.com/NVIDIA/PyProf/blob/r20.06>`_.
 
 .. overview-begin-marker-do-not-remove
 
@@ -50,6 +52,11 @@ following additional features:
 * Correlate the line in the user's code that launched a particular kernel (program trace).
 
 .. overview-end-marker-do-not-remove
+
+The current release of PyProf is 3.1.0 and is available in the 20.06 release of
+the PyTorch container on `NVIDIA GPU Cloud (NGC) <https://ngc.nvidia.com>`_. The 
+branch for this release is `r20.06
+<https://github.com/NVIDIA/PyProf/tree/r20.06>`_.
 
 Documentation
 -------------
