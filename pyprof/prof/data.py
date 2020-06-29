@@ -58,7 +58,7 @@ class Data(object):
         self.bytes = 0
 
     def setParams(self, params):
-        # TODO: Remove the else block after refactoring.
+        # In the process of being refactored
         if type(params) == str:
           self.params = params
         else:
