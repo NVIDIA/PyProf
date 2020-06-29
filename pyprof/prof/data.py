@@ -58,15 +58,19 @@ class Data(object):
         self.bytes = 0
 
     def setParams(self, params):
-        #Remove space from params
-        qaz = ""
-        for key, value in params.items():
-            if "type" not in key:
-                qaz += "{}={},".format(key, value)
-            else:
-                if type(value) is str:
-                    qaz += "{},".format(Utility.typeToString(value))
-                else:
-                    qaz += "{}".format(value)
-
-        self.params = qaz.replace(" ", "")
+        # In the process of being refactored
+        if type(params) == str:
+          self.params = params
+        else:
+          #Remove space from params
+          qaz = ""
+          for key, value in params.items():
+              if "type" not in key:
+                  qaz += "{}={},".format(key, value)
+              else:
+                  if type(value) is str:
+                      qaz += "{},".format(Utility.typeToString(value))
+                  else:
+                      qaz += "{}".format(value)
+          
+          self.params = qaz.replace(" ", "")

@@ -15,10 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-from .utility import Utility
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
 
 class Dropout(OperatorLayerBase):
 
@@ -37,15 +35,13 @@ class Dropout(OperatorLayerBase):
         assert (op == "dropout")
         #assert (len(args) == 1)
 
-        self.shape = args[0]['shape']
-        self.type = args[0]['dtype']
+        self.inp = Tensor(args[0]['shape'], args[0]['dtype'])
         self.dir = d.dir
 
         return
 
     def params(self):
-        p = OrderedDict([('T', self.shape), ('type', self.type)])
-        return p
+        return str(self.inp)
 
     def op(self):
         return self.op_
@@ -56,13 +52,10 @@ class Dropout(OperatorLayerBase):
     def tc(self):
         return "-"
 
-    def elems(self):
-        return Utility.numElems(self.shape)
-
     def bytes(self):
         #Ignoring the cost of writing and reading the mask
-        return Utility.typeToBytes(self.type) * self.elems() * 2
+        return self.inp.bytes * 2
 
     def flops(self):
         # Note: This is approximate and depends on the RNG
-        return 5 * self.elems()
+        return 5 * self.inp.size
