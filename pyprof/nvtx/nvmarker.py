@@ -75,33 +75,21 @@ def traceMarker():
     #
     def get_func_stack():
         func_stack = ""
-        ins_stack = ins.stack()
+        stack = traceback.extract_stack()
 
-        # Starting at index of 3 to ignore this function, it's parent (traceMarker) and it's parent (wrapper_func)
-        #
-        for i in range(3, len(ins_stack)):
-            frame = ins_stack[i]
-            fn_name = frame[0].f_code.co_name
-            frame_info = ""
+        # Ignoring the last 3 frames: this function, it's parent (traceMarker) and it's parent (wrapper_func)
+        for i in range(len(stack) - 3):
+            frame = stack[i]
 
             # __call__:  Much of Torch library is implemented in this way. Ignore these extra layers
             # wrapper_func: Is a function in this file. If there are nested monkeypatched functions we don't want it to show up
             # <module>: Just the top level module. Doesn't add any information and if it exists in any html it breaks it
             #
-            if (fn_name in ["__call__","wrapper_func","<module>"]):
-                continue
+            if (frame.name in ["__call__","wrapper_func","<module>"]):
+                    continue
 
-            # Grab class name if it exists
-            #
-            if 'self' in frame[0].f_locals:
-                cls_name = frame[0].f_locals['self'].__class__.__name__
-                frame_info += cls_name + "::"
-
-            frame_info += fn_name
-
-            # Prepend this frame's info into the function stack
-            #
-            func_stack = '/' + frame_info + func_stack
+            # Append this frame's info into the function stack    
+            func_stack = func_stack + "/" + frame.name
 
         return func_stack
 
