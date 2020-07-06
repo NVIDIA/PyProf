@@ -71,6 +71,16 @@ def isfunc(mod, f):
 # Returns a dict string with a tracemarker and function stack in it
 #
 def traceMarker():
+
+    # Return True if the name in the hierarchy should be skipped
+    def should_skip_frame_name(name):
+        if name in ["__call__","wrapper_func","<module>", "always_benchmark_wrapper"]:
+            return True
+        elif name.startswith("<") and name.endswith(">"):
+            return True
+        else:
+             return False
+
     # Returns a string representing the stack of function calls separated with '/'
     #
     def get_func_stack():
@@ -85,7 +95,7 @@ def traceMarker():
             # wrapper_func: Is a function in this file. If there are nested monkeypatched functions we don't want it to show up
             # <module>: Just the top level module. Doesn't add any information and if it exists in any html it breaks it
             #
-            if (frame.name in ["__call__","wrapper_func","<module>"]):
+            if should_skip_frame_name(frame.name):
                     continue
 
             # Append this frame's info into the function stack    
