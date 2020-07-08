@@ -29,10 +29,15 @@ class Linear(OperatorLayerBase):
 	bias in bprop is a reduction and hence is 1 read.
 	'''
 
-    gemmKernels = ["gemm", "gemv", "dot_kernel", "splitKreduce_kernel", "reduce_1Block_kernel"]
+    gemmKernels = [
+        "gemm", "gemv", "dot_kernel", "splitKreduce_kernel",
+        "reduce_1Block_kernel", "cutlass"
+    ]
+
     biasKernels = [
-        "kernelReduceContigDim", "kernelReduceNoncontigDim_shared", "elementwise_kernel", "reduce_kernel",
-        "kernelPointwiseApply2", "2d_grouped_direct_kernel"
+        "kernelReduceContigDim", "kernelReduceNoncontigDim_shared",
+        "elementwise_kernel", "reduce_kernel", "kernelPointwiseApply2",
+        "2d_grouped_direct_kernel"
     ]
 
     def setXWBMNK(self, args):
@@ -107,7 +112,7 @@ class Linear(OperatorLayerBase):
         if any(x in d.name for x in Linear.gemmKernels):
             self.op_ = "linear"
         else:
-            assert any(x in d.name for x in Linear.biasKernels), f"Kernel data: {d}"
+            assert any(x in d.name for x in Linear.biasKernels), "Kernel Name: {}".format(d.name)
             self.op_ = "bias"
         '''
 		elif (("kernelPointwiseApply2" in d.name) or ("kernelReduceContigDim" in d.name) or ("kernelReduceNoncontigDim_shared" in d.name)):
@@ -198,6 +203,7 @@ class Linear(OperatorLayerBase):
             assert False
         return b, f
 
+    # TODO: Fix bytes and flops with CUTLASS kernels.
     def bytes(self):
         b, f = self.bytesFlops()
         return b
