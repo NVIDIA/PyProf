@@ -27,8 +27,8 @@ SKIP_PATHS = ('requirements.txt',
               'LICENSE',
               'VERSION')
 
-COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9])'
-COPYRIGHT_YEAR_RE1 = 'Copyright \\(c\\) (20[0-9][0-9])-(20[0-9][0-9])'
+COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9]),'
+COPYRIGHT_YEAR_RE1 = 'Copyright \\(c\\) (20[0-9][0-9])-(20[0-9][0-9]),'
 
 COPYRIGHT ='''
 
