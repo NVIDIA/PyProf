@@ -41,6 +41,10 @@ import traceback
 import math
 import json
 
+# Flag to indicate if traceMarker should collect a func_stack or not
+#
+enable_func_stack = False
+
 def isfunc(mod, f):
     assert hasattr(mod, f)
     attr = getattr(mod, f)
@@ -68,58 +72,139 @@ def isfunc(mod, f):
     return ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr)
 
 
+# Nested dicts of this run's frame names to help uniquify them
+#
+# func_map[(partial_func_stack,frame_name)][filename+lineno] = frame_name_to_use
+#
+func_map = {}
+
 # Returns a dict string with a tracemarker and function stack in it
 #
-def traceMarker():
+def traceMarker(op_name):
+    global func_map
 
     # Return True if the name in the hierarchy should be skipped
-    def should_skip_frame_name(name):
-        if name in ["__call__","wrapper_func","<module>", "always_benchmark_wrapper"]:
-            return True
-        elif name.startswith("<") and name.endswith(">"):
-            return True
-        else:
-             return False
-
-    # Returns a string representing the stack of function calls separated with '/'
     #
-    def get_func_stack():
-        func_stack = ""
-        stack = traceback.extract_stack()
+    def should_skip_frame_name(name, prev_name):
+        # __call__:  
+        #    Much of Torch library is implemented in this way. Ignore these extra layers
+        # wrapper_func and always_benchmark_warpper: 
+        #    Are functions in this file. If there are nested monkeypatched functions 
+        #    we don't want it to show up
+        # <*>: 
+        #    Things like <module>, <genexpr>, <lamba> which don't add any information 
+        #    and break html
+        #
+        for prefix in ["__call__", "wrapper_func", "always_benchmark_wrapper"]:
+            if name.startswith(prefix):
+                return True
+        if name.startswith("<") and name.endswith(">"):
+            return True
+        if name==prev_name:
+            return True
+        return False
 
-        # Ignoring the last 3 frames: this function, it's parent (traceMarker) and it's parent (wrapper_func)
-        for i in range(len(stack) - 3):
-            frame = stack[i]
+    # Given a function stack, clean it up to remove unwanted fields as 
+    # well as removing any back-to-back duplicates
+    # 
+    def cleanup_func_stack(func_stack, op_name):
+        ret = ""
+        prev_fn_name = ""
+        suffix = ""
 
-            # __call__:  Much of Torch library is implemented in this way. Ignore these extra layers
-            # wrapper_func: Is a function in this file. If there are nested monkeypatched functions we don't want it to show up
-            # <module>: Just the top level module. Doesn't add any information and if it exists in any html it breaks it
+        x = func_stack.split("/")
+        for fn_name in x:
+
+            # This is used to detect when the same torch op was called 
+            # multiple times from the same parent function. Capture the
+            # count as a 'suffix' and put it on the end of the op name
             #
-            if should_skip_frame_name(frame.name):
-                    continue
+            if fn_name.startswith("wrapper_func("):
+                suffix = fn_name.replace("wrapper_func","")
+            if fn_name.startswith("always_benchmark_wrapper("):
+                suffix = fn_name.replace("always_benchmark_wrapper","")
 
-            # Append this frame's info into the function stack    
-            func_stack = func_stack + "/" + frame.name
+            if not should_skip_frame_name(fn_name, prev_fn_name):
+                ret += "/" + fn_name
+        ret += "/" + op_name + suffix
+        return ret
 
-        return func_stack
-
-    # Return a trace marker string
+    # Return a trace marker string and func_stack string
     #
-    def get_trace_marker():
+    def get_trace_info(op_name):
         cadena = []
         stack = traceback.extract_stack()
-        
-        # Starting at index of 3 to ignore this function, it's parent (traceMarker) and it's parent (wrapper_func)
+        func_stack = ""
+
+        # Previous frame name and line. This is the file and line 
+        # that CALLED the frame we are in
         #
-        for i in range(len(stack) - 3):
-            fi = stack[i]
-            t = "{}:{}".format(fi.filename, fi.lineno)
-            cadena.append(t)
-        return cadena
+        prev_fnl = "" 
+
+        # Starting at index of 2 to ignore this function and its parent (traceMarker).
+        # Intentionally leaving in wrapper_func and other functions in this file as they
+        # may be needed to uniquify the node name
+        #
+        for i in range(len(stack) - 2):
+            frame = stack[i]
+
+            # Build traceMarker
+            #
+
+            # Don't include any functions in this file
+            #
+            fnl = "{}:{}".format(frame.filename, frame.lineno)
+            if (not frame.filename.endswith("nvmarker.py")):
+                cadena.append(fnl)
+
+            # Early exit if we aren't doing any funcStack code
+            #
+            if (not enable_func_stack):
+                continue
+
+            # Build funcStack
+            #
+            fn_name = frame.name
+
+            key = (func_stack, frame.name)
+
+            if key not in func_map.keys():
+                func_map[key] = {}
+
+            # If we have been to this stack depth with all the same 
+            # information, use the stored name
+            #            
+            if prev_fnl in func_map[key].keys():
+                fn_name = func_map[key][prev_fnl]
+            else:
+                # If we have been do this stack depth and have called 
+                # this function at least once but didn't hit in the dict
+                # above, then this is a repeat call. Postpend a count
+                # to the fn_name to uniquify it
+                #
+                if len(func_map[key]) > 0:
+                    fn_name = fn_name + "(" + str(1 + len(func_map[key])) + ")"
+
+                # Store this new unique stack information with the 
+                # determined fn_name
+                #
+                func_map[key][prev_fnl] = fn_name    
+            prev_fnl = fnl
+
+            # Append this frame's info into the function stack    
+            #
+            func_stack = func_stack + "/" + fn_name
+
+        if (enable_func_stack):
+            func_stack = cleanup_func_stack(func_stack, op_name)
+
+        return cadena, func_stack
 
     d = {}
-    d['traceMarker'] = get_trace_marker()
-    d['funcStack'] = get_func_stack()
+    tm, fs = get_trace_info(op_name)
+    d['traceMarker'] = tm
+    if (enable_func_stack):
+        d['funcStack'] = fs
     return str(d)
 
 
@@ -149,7 +234,7 @@ def add_wrapper(mod, fn_name):
     def wrapper_func(*args, **kwargs):
 
         # Push trace marker
-        nvtx.range_push(traceMarker())
+        nvtx.range_push(traceMarker(fn_name))
 
         # Push module marker
         if s:
@@ -300,7 +385,7 @@ def patch_dataloader():
     def new_iter(self, *args, **kwargs):
 
         # Push trace marker
-        nvtx.range_push(traceMarker())
+        nvtx.range_push(traceMarker("Dataloader"))
 
         # First pass is for creating the dataloader + returning the first data
         cadena = argMarker(mod, "DataLoader", args, kwargs)
@@ -317,7 +402,7 @@ def patch_dataloader():
             yield x
 
             # Push trace marker
-            nvtx.range_push(traceMarker())
+            nvtx.range_push(traceMarker("DataLoader"))
 
             # Model stop, dataloader start
             cadena = argMarker(mod, "DataLoader", args, kwargs)
@@ -479,7 +564,10 @@ def patch_model_configs():
     patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
 
 
-def init():
+def init(enable_fs=False):
+    global enable_func_stack
+    enable_func_stack = enable_fs
+
     print("Initializing NVTX monkey patches")
 
     patch_dataloader()
