@@ -200,7 +200,11 @@ def run_tests(test_name):
     suite = unittest.TestSuite()
     for test_case in test_cases:
         suite.addTest(TestPyProfFuncStack(test_case))
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    if result.wasSuccessful():
+        exit(0)
+    else:
+        exit(1)
+        
 if __name__ == '__main__':
     run_tests("test_basic")
