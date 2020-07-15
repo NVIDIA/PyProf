@@ -565,7 +565,11 @@ def run_tests(precision):
     suite = unittest.TestSuite()
     for test_case in test_cases:
         suite.addTest(TestPyProfNvtx(test_case, precision))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    if result.wasSuccessful():
+        exit(0)
+    else:
+        exit(1)
 
 
 if __name__ == '__main__':
