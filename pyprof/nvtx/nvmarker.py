@@ -40,10 +40,8 @@ import inspect as ins
 import traceback
 import math
 import json
+from .config import Config
 
-# Flag to indicate if traceMarker should collect a func_stack or not
-#
-enable_func_stack = False
 
 def isfunc(mod, f):
     assert hasattr(mod, f)
@@ -161,7 +159,7 @@ def traceMarker(op_name):
 
             # Early exit if we aren't doing any funcStack code
             #
-            if (not enable_func_stack):
+            if not Config.getInstance().isFuncStackEnabled():
                 continue
 
             # Build funcStack
@@ -197,7 +195,7 @@ def traceMarker(op_name):
             #
             func_stack = func_stack + "/" + fn_name
 
-        if (enable_func_stack):
+        if Config.getInstance().isFuncStackEnabled():
             func_stack = cleanup_func_stack(func_stack, op_name)
 
         return cadena, func_stack
@@ -205,7 +203,7 @@ def traceMarker(op_name):
     d = {}
     tm, fs = get_trace_info(op_name)
     d['traceMarker'] = tm
-    if (enable_func_stack):
+    if Config.getInstance().isFuncStackEnabled():
         d['funcStack'] = fs
     return str(d)
 
@@ -566,9 +564,9 @@ def patch_model_configs():
     patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
 
 
-def init(enable_fs=False):
-    global enable_func_stack
-    enable_func_stack = enable_fs
+def init(**kwargs):
+    config = Config.getInstance()
+    config.setConfig(**kwargs)
 
     print("Initializing NVTX monkey patches")
 

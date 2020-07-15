@@ -21,8 +21,10 @@ import inspect
 import unittest
 
 import pyprof
+from pyprof.nvtx.config import Config
 
-pyprof.nvtx.nvmarker.enable_func_stack = True
+config = Config.getInstance()
+config.setConfig(enable_function_stack=True)
 
 class TestPyProfFuncStack(unittest.TestCase):
 
