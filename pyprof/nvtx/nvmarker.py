@@ -108,6 +108,7 @@ def traceMarker(op_name):
     # well as removing any back-to-back duplicates
     # 
     def cleanup_func_stack(func_stack, op_name):
+
         ret = ""
         prev_fn_name = ""
         suffix = ""
@@ -126,6 +127,7 @@ def traceMarker(op_name):
 
             if not should_skip_frame_name(fn_name, prev_fn_name):
                 ret += "/" + fn_name
+                prev_fn_name = fn_name
         ret += "/" + op_name + suffix
         return ret
 
