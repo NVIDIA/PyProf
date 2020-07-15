@@ -22,6 +22,7 @@ import unittest
 
 import pyprof
 
+pyprof.nvtx.nvmarker.enable_func_stack = True
 
 class TestPyProfFuncStack(unittest.TestCase):
 
@@ -41,7 +42,7 @@ class TestPyProfFuncStack(unittest.TestCase):
             separator = "/"
             fn_split = x.split(separator)
             for i, n in enumerate(fn_split):
-                if (n == "TestPyProfFuncStack::run"):
+                if (n == "run"):
                     fn_split = fn_split[i+1:]
                     break
 
@@ -53,16 +54,15 @@ class TestPyProfFuncStack(unittest.TestCase):
         self.assertEqual(expected_str,actual_func_stack)
 
     # Basic function hierarchy test
-    # Function stack is func1->func2->func3->ignored.
-    # Test that the leaf function's funcStack is TestPyProfFuncStack::test_basic/func1/func2/func3
+    # Function stack is func1->func2->func3->wrapper_func.
     #
     def test_basic(self):
-        def ignored():
-            tracemarker = pyprof.nvtx.nvmarker.traceMarker()
-            self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_basic/func1/func2/func3")
+        def wrapper_func():
+            tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
+            self.compare_funcstack(tracemarker,"test_basic/func1/func2/func3/opname")
             
         def func3():
-            ignored()
+            wrapper_func()
 
         def func2():
             func3()
@@ -72,24 +72,23 @@ class TestPyProfFuncStack(unittest.TestCase):
 
         func1()
 
-    # Test that 'wrapper_func' is ignored in hierarchy
-    # Function stack is func1->func2->ExecutableClass::__call__->outer_func1->outer_func2->outer_ignored
-    # Test that the leaf function's funcStack is TestPyProfFuncStack::test_ignore_wrapper_func/func1/func2/func3
+    # Test that 'always_benchmark_wrapper' is ignored in hierarchy
+    # Function stack is func1->func2->always_benchmark_wrapper->func3->wrapper_func
     #
     def test_ignore_wrapper_func(self):
            
-        def ignored():
-            tracemarker = pyprof.nvtx.nvmarker.traceMarker()
-            self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_ignore_wrapper_func/func1/func2/func3")
+        def wrapper_func():
+            tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
+            self.compare_funcstack(tracemarker,"test_ignore_wrapper_func/func1/func2/func3/opname")
 
         def func3():
-            ignored()
+            wrapper_func()
 
-        def wrapper_func():
+        def always_benchmark_wrapper():
             func3()
 
         def func2():
-            wrapper_func()
+            always_benchmark_wrapper()
 
         def func1():
             func2()
@@ -97,17 +96,16 @@ class TestPyProfFuncStack(unittest.TestCase):
         func1()
 
     # Test that '__call__' is ignored in hierarchy
-    # Function stack is func1->func2->abc::__call__->func3->ignored.
-    # Test that the leaf function's funcStack is TestPyProfFuncStack::test_ignore_class_call/func1/func2/func3
+    # Function stack is func1->func2->ExecutableClass::__call__->func3->wrapper_func
     #
     def test_ignore_class_call(self):
 
-        def ignored():
-            tracemarker = pyprof.nvtx.nvmarker.traceMarker()
-            self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_ignore_class_call/func1/func2/func3")
+        def wrapper_func():
+            tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
+            self.compare_funcstack(tracemarker,"test_ignore_class_call/func1/func2/func3/opname")
             
         def func3():
-            ignored()
+            wrapper_func()
 
         class ExecutableClass:
             def __call__(self):
@@ -121,6 +119,77 @@ class TestPyProfFuncStack(unittest.TestCase):
             func2()
 
         func1()
+
+    # Test that lambdas are ignored in hierarchy
+    # Function stack is func1->func2->lambda->func3->wrapper_func
+    #
+    def test_ignore_lambda(self):
+           
+        def wrapper_func():
+            tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
+            self.compare_funcstack(tracemarker,"test_ignore_lambda/func1/func2/func3/opname")
+
+        def func3():
+            wrapper_func()
+
+        def func2():
+            x = lambda: func3()
+            x()
+
+        def func1():
+            func2()
+
+        func1()
+
+    # Test that duplicates are ignored in hierarchy
+
+    # Function stack is func1->func1->func1->func1->func2->wrapper_func
+    #
+    def test_ignore_duplicates(self):
+           
+        def wrapper_func():
+            tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
+            self.compare_funcstack(tracemarker,"test_ignore_duplicates/func1/func2/opname")
+
+        def func2():
+            wrapper_func()
+
+        def func1(count):
+            if (count > 0):
+                func1(count-1)
+            else:
+                func2()
+
+        func1(3)
+
+    # Function stack is func1->func2->wrapper_func. It is called 4 times. 
+    #
+    # Only the 4th time is any checking done
+    #
+    # On that 4th call, it will be the 2nd time executing func2, from func1, and
+    # it will be the 2nd time executing wrapper_func from that 2nd call of func2. 
+    # 
+    # Even though wrapper_func is omitted from the func stack, its call count should
+    # be passed on to the opname.
+    # 
+    # As such, the result should be test_uniquified_nodes/func1/func2(2)/opname(2)
+    #
+    def test_uniquified_nodes(self):
+        def wrapper_func(check):
+            tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
+            if (check):
+                self.compare_funcstack(tracemarker,"test_uniquified_nodes/func1/func2(2)/opname(2)")
+
+        def func2(check):
+            wrapper_func(False)
+            wrapper_func(check)
+
+        def func1():
+            func2(False)
+            func2(True)
+
+        func1()
+
 
 def run_tests(test_name):
     dummy = TestPyProfFuncStack(test_name)
