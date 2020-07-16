@@ -23,8 +23,7 @@ import unittest
 import pyprof
 from pyprof.nvtx.config import Config
 
-config = Config.getInstance()
-config.setConfig(enable_function_stack=True)
+config = Config(enable_function_stack=True)
 
 class TestPyProfFuncStack(unittest.TestCase):
 

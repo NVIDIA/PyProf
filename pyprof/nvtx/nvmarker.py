@@ -159,7 +159,7 @@ def traceMarker(op_name):
 
             # Early exit if we aren't doing any funcStack code
             #
-            if not Config.getInstance().isFuncStackEnabled():
+            if not Config.getInstance().func_stack_enabled:
                 continue
 
             # Build funcStack
@@ -195,7 +195,7 @@ def traceMarker(op_name):
             #
             func_stack = func_stack + "/" + fn_name
 
-        if Config.getInstance().isFuncStackEnabled():
+        if Config.getInstance().func_stack_enabled:
             func_stack = cleanup_func_stack(func_stack, op_name)
 
         return cadena, func_stack
@@ -203,7 +203,7 @@ def traceMarker(op_name):
     d = {}
     tm, fs = get_trace_info(op_name)
     d['traceMarker'] = tm
-    if Config.getInstance().isFuncStackEnabled():
+    if Config.getInstance().func_stack_enabled:
         d['funcStack'] = fs
     return str(d)
 
@@ -565,8 +565,7 @@ def patch_model_configs():
 
 
 def init(**kwargs):
-    config = Config.getInstance()
-    config.setConfig(**kwargs)
+    config = Config(**kwargs)
 
     print("Initializing NVTX monkey patches")
 
