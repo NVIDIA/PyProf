@@ -17,7 +17,6 @@
 
 class Config:
     __instance = None
-    func_stack_enabled = False
 
     @staticmethod
     def getInstance():
