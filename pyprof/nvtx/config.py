@@ -17,7 +17,7 @@
 
 class Config:
     __instance = None
-    enable_func_stack = False
+    func_stack_enabled = False
 
     @staticmethod
     def getInstance():
@@ -25,17 +25,10 @@ class Config:
             Config()
         return Config.__instance
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         if Config.__instance != None:
             raise Exception("This is a singleton")
         else:
             Config.__instance = self
-    
-    def setConfig(self, **kwargs):
-        print("tkg in set_config")
-        for k,v in kwargs.items():
-            print(k,v)
-        self.enable_func_stack = kwargs.get("enable_function_stack", False)
-
-    def isFuncStackEnabled(self):
-        return self.enable_func_stack
+            self.func_stack_enabled = kwargs.get("enable_function_stack", False)
+        
