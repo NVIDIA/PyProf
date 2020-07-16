@@ -565,6 +565,13 @@ def patch_model_configs():
 
 
 def init(**kwargs):
+    """
+    Initialize pyprof and monkey-patch Torch functions
+
+    Kwargs:
+        enable_function_stack (bool): When true, function stack information will be added to NVTX markers
+    """
+
     config = Config(**kwargs)
 
     print("Initializing NVTX monkey patches")
