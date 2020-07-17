@@ -30,4 +30,3 @@ class Config:
         else:
             Config.__instance = self
             self.func_stack_enabled = kwargs.get("enable_function_stack", False)
-        
