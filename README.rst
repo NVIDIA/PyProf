@@ -18,6 +18,12 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
+    **NOTE: Our forward-backward kernel correlation heuristics are not working correctly 
+    with PyTorch v1.6. We are working to resolve it. In the mean time, please use Pytorch 
+    1.5 or the 20.03 NGC container, which you can retrieve via:** ::
+
+      docker pull http://nvcr.io/nvidia/pytorch:20.03-py3
+
     **LATEST RELEASE: You are currently working on the master branch which
     tracks under-development progress towards the next release. The
     latest release of the PyProf is 3.1.0 and is available on branch** `r20.06
