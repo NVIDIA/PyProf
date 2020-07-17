@@ -92,6 +92,13 @@ def traceMarker(op_name):
         # <*>: 
         #    Things like <module>, <genexpr>, <lamba> which don't add any information 
         #    and break html
+        # name==prev_name:
+        #    Remove back-to-back duplicates of the same function name.
+        #    This is common when python calls the inheritence stack
+        #    For example:
+        #      This: ModelAndLoss::forward/ResNet::forward/Sequential::forward/Bottleneck::forward/BatchNorm2d::forward
+        #      Comes to this function as: forward/forward/forward/forward/forward
+        #      Leaves this function as: forward
         #
         for prefix in ["__call__", "wrapper_func", "always_benchmark_wrapper"]:
             if name.startswith(prefix):
@@ -117,6 +124,16 @@ def traceMarker(op_name):
             # This is used to detect when the same torch op was called 
             # multiple times from the same parent function. Capture the
             # count as a 'suffix' and put it on the end of the op name
+            #
+            # For example, if we end up with these:
+            #   a/b/c/wrapper_func
+            #   a/b/c/wrapper_func(2)
+            # Both would end up as a/b/c after the wrapper function is ignored
+            # However, we want to keep the information that the resulting torch op
+            # called by wrapper_func was called 2 different times from the same function 'c'
+            # 
+            # This code changes "wrapper_func(2)" to "(2)" so that it doesn't get filtered 
+            # out by should_skip_frame_name()
             #
             if fn_name.startswith("wrapper_func("):
                 suffix = fn_name.replace("wrapper_func","")
