@@ -18,24 +18,30 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **NOTE: Our forward-backward kernel correlation heuristics are not working correctly 
-    with PyTorch v1.6. We are working to resolve it. In the mean time, please use Pytorch 
-    1.5 or the 20.03 NGC container, which you can retrieve via:** ::
-
-      docker pull http://nvcr.io/nvidia/pytorch:20.03-py3
-
-    **LATEST RELEASE: You are currently working on the master branch which
-    tracks under-development progress towards the next release. The
-    latest release of the PyProf is 3.1.0 and is available on branch** `r20.06
-    <https://github.com/NVIDIA/PyProf/blob/r20.06>`_.
+    **PRE-RELEASE: You are currently on the r20.08 branch which tracks
+    stabilization towards the new release.**
 
 .. overview-begin-marker-do-not-remove
 
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
 models. PyProf aggregates kernel performance from `Nsight Systems
 <https://developer.nvidia.com/nsight-systems>`_ or `NvProf
-<https://developer.nvidia.com/nvidia-visual-profiler>`_ and provides the 
-following additional features:
+<https://developer.nvidia.com/nvidia-visual-profiler>`_.
+
+What's New in 3.3.0
+-------------------
+
+* Capture PyTorch API information and data loading configuration
+
+* Added CUTLASS to the list of GEMM kernels
+
+* Added optional function stack tracing to NVTX markers. Enable with ::
+
+   pyprof.init(enable_function_stack=True)
+
+
+Features
+--------
 
 * Identifies the layer that launched a kernel: e.g. the association of 
   `ComputeOffsetsKernel` with a concrete PyTorch layer or API is not obvious.
@@ -59,20 +65,26 @@ following additional features:
 
 .. overview-end-marker-do-not-remove
 
-The current release of PyProf is 3.1.0 and is available in the 20.06 release of
+The current release of PyProf is 3.3.0 and is available in the 20.08 release of
 the PyTorch container on `NVIDIA GPU Cloud (NGC) <https://ngc.nvidia.com>`_. The 
-branch for this release is `r20.06
-<https://github.com/NVIDIA/PyProf/tree/r20.06>`_.
+branch for this release is `r20.08
+<https://github.com/NVIDIA/PyProf/tree/r20.08>`_.
 
 Documentation
 -------------
 
 The User Guide can be found in the 
-`PyProf docs folder <https://github.com/NVIDIA/PyProf/blob/master/docs>`_, and 
+`documentation for current release 
+<https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/index.html>`_, and 
 provides instructions on how to install and profile with PyProf.
 
-An `FAQ <https://github.com/NVIDIA/PyProf/blob/master/docs/faqs.rst>`_ provides
+An `FAQ <https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/index.html/faqs.rst>`_ provides
 answers for frequently asked questions.
+
+The `Release Notes 
+<https://docs.nvidia.com/deeplearning/frameworks/pyprof-release-notes/index.html>`_
+indicate the required versions of the NVIDIA Driver and CUDA, and also describe 
+which GPUs are supported by PyProf.
 
 Contributing
 ------------
