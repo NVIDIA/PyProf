@@ -35,14 +35,10 @@ What's New in 3.3.0
 
 * Added CUTLASS to the list of GEMM kernels
 
-Known Issues
-------------
+* Added optional function stack tracing to NVTX markers. Enable with ::
 
-* Forward-Backward kernel correlation heuristics do not work correctly with 
-  PyTorch 1.6. Recommended work arounds include:
+   pyprof.init(enable_function_stack=True)
 
-  * Use with PyTorch 1.5
-  * Use DLProf in the `20.08 NGC Pytorch container <https://ngc.nvidia.com/catalog/containers/nvidia:pytorch>`_
 
 Features
 --------
