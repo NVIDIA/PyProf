@@ -37,16 +37,19 @@ class TestPyProfFuncStack(unittest.TestCase):
         pass
 
     def compare_funcstack(self, actual_tracemarker, expected_str):
-        # Given a funcstack string, remove TestPyProfFuncStack::run and everything above it
+        # Given a funcstack string, remove TestPyProfFuncStack::__call__/run and everything above it
         #
         def remove_test_class_hierarchy(x):
             separator = "/"
             fn_split = x.split(separator)
+            split = 0
+            # Find the LAST instance of run in the split
+            #
             for i, n in enumerate(fn_split):
                 if (n == "run"):
-                    fn_split = fn_split[i+1:]
-                    break
+                    split = i+1
 
+            fn_split = fn_split[split:]
             joined = separator.join(fn_split)
             return joined
 
@@ -103,7 +106,7 @@ class TestPyProfFuncStack(unittest.TestCase):
 
         def wrapper_func():
             tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
-            self.compare_funcstack(tracemarker,"test_ignore_class_call/func1/func2/func3/opname")
+            self.compare_funcstack(tracemarker,"test_ignore_class_call/func1/func2/ExecutableClass::__call__/func3/opname")
             
         def func3():
             wrapper_func()
