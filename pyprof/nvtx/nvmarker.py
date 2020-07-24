@@ -187,7 +187,8 @@ def traceMarker(op_name):
             #
             if (frame.name.startswith("__")):
 
-                # Step down into the detailed frame we want. This is much faster and less
+                # Iterate through the stack frames (like a linked list) until we get
+                # to the detailed frame we want. This is much faster and less
                 # expensive than extracting the entire frame stack every time
                 #
                 # ins stack is backwards from traceback, so depth is inverse 
