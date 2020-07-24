@@ -195,7 +195,7 @@ def traceMarker(op_name):
                 #
                 depth = len(stack) - i
                 ins_frame = ins.currentframe()
-                for j in range(1,depth):
+                for _ in range(1,depth):
                     ins_frame = ins_frame.f_back
 
                 # Grab the class name if it exists
