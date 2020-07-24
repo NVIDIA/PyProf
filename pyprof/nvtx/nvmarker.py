@@ -183,6 +183,23 @@ def traceMarker(op_name):
             #
             fn_name = frame.name
 
+            # Capture class name for any special class functions
+            #
+            if (frame.name.startswith("__")):
+                # ins.stack order is backwards with respect to traceback, so index from
+                # the back instead of the front
+                #
+                index = -(i+1)
+                detailed_frame = ins.stack()[index][0]
+                try:
+                    if 'self' in detailed_frame.f_locals:
+                        fn_name = detailed_frame.f_locals['self'].__class__.__name__ + "::" + fn_name
+                # Explicitly delete the object to avoid memory issues due to reference cycles
+                #
+                finally:
+                    del detailed_frame
+
+
             key = (func_stack, frame.name)
 
             if key not in func_map.keys():
