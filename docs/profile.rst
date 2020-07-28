@@ -16,9 +16,6 @@
 Profiling PyTorch with PyProf
 =============================
 
-    TODO: this chapter should go into the details of profiling, 
-    including any options.
-
 Overview
 --------
 For FLOP and bandwidth calculations, we use a relatively straightforward approach. 
@@ -44,11 +41,6 @@ with information that helps root cause performance issues and prioritize optimiz
 
 Enable Profiler in PyTorch Network
 ----------------------------------
-
-  *TODO:* provide more detail about `torch.cuda.profiler`, why it is needed
-  and how to access it. The follow is cut and pasted from old README and needs
-  to be expanded.
-
 
 Pyprof makes use of the profiler functionality available in `Pytorch
 <https://pytorch.org/docs/stable/autograd.html#profiler>`_.
@@ -95,7 +87,7 @@ Here's an example: ::
 Profile with NVprof
 -------------------
 
-If you are not using Nvprof, skip ahead to :ref:`section-profile-with-nsys`.
+If you are not using Nvprof, skip ahead to `Profile with Nsight Systems`_.
 
 Run NVprof to generate a SQL (NVVP) file. This file can be opened with NVVP.
 
@@ -113,7 +105,7 @@ a message such as ::
   **_ERR_NVGPUCTRPERM The user running <tool_name/application_name> does not 
   have permission to access NVIDIA GPU Performance Counters on the target device_**
   
-Please follow the steps described in :ref:`section-profile-hardware-counters`.
+Please follow the steps described in `Hardware Counters`_.
 
 .. _section-profile-with-nsys:
 
@@ -223,9 +215,9 @@ Profiling GPU workloads may require access to hardware performance
 counters. Due to a fix in recent NVIDIA drivers addressing CVE‑2018‑6260, 
 the hardware counters are disabled by default, and require elevated 
 privileges to be enabled again. If you're using a recent driver, 
-you may see the following message when trying to run nvprof:
+you may see the following message when trying to run nvprof::
 
-**_ERR_NVGPUCTRPERM The user running <tool_name/application_name> does not have permission to access NVIDIA GPU Performance Counters on the target device._**
+  _ERR_NVGPUCTRPERM The user running <tool_name/application_name> does not have permission to access NVIDIA GPU Performance Counters on the target device._**
 
 For details, see `here <https://developer.nvidia.com/nvidia-development-tools-solutions-ERR_NVGPUCTRPERM-permission-issue-performance-counters>`_.
 

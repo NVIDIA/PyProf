@@ -22,21 +22,12 @@ PyProf is available in the following ways:
 
 * As installable python code located in GitHub.
 
-.. _section-quickstart-prerequisites:
-
-Prerequisites
--------------
-
-    TODO: List any prerequisites, including point to instructions on how to
-    install either 
-
 .. _section-quickstart-installing-from-github:
 
 Installing from GitHub
 ----------------------
 
-Make sure you complete the steps in :ref:`section-quickstart-prerequisites`
-before attempting to install PyProf. See :ref:`section-installing-from-github`
+See :ref:`section-installing-from-github`
 for details on how to install from GitHub
 
 .. _section-quickstart-profile-with-pyprof:

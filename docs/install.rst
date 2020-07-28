@@ -25,12 +25,19 @@ PyProf is available from GitHub.
 Installing from GitHub
 ----------------------
 
-    * git clone https://github.com/NVIDIA/PyProf.git
+* Clone the git repository ::
+    
+    $ git clone https://github.com/NVIDIA/PyProf.git
 
-    * navigate to the top level PyProf directory
+* Navigate to the top level PyProf directory
 
-    * pip install .
+* Install PyProf ::
 
-    * verify installation is complete via:  ``pip list | grep pyprof``. 
-         # Should display ``pyprof x.y`` where ``x.y`` is the PyProf version installed.
+   $ pip install .
+
+* Verify installation is complete with pip list ::
+
+   $ pip list | grep pyprof 
+
+* Should display ``pyprof 3.2.0``.
     

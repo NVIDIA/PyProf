@@ -70,11 +70,14 @@ branch for this release is `r20.07
 Documentation
 -------------
 
-The User Guide can be found in the 
-`PyProf docs folder <https://github.com/NVIDIA/PyProf/blob/master/docs>`_, and 
-provides instructions on how to install and profile with PyProf.
+A `Quick Start Guide <https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/quickstart.html>`_ and 
+`Installation Guide <https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/install.html>`_
+provide instructions on how to install and use PyProf.
 
-An `FAQ <https://github.com/NVIDIA/PyProf/blob/master/docs/faqs.rst>`_ provides
+The User Guide can be found in the 
+`documentation for current release <https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/index.html>`_.
+
+An `FAQ <https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/faqs.html>`_ provides
 answers for frequently asked questions.
 
 Contributing

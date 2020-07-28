@@ -31,3 +31,10 @@ COPY . .
 
 RUN pip uninstall -y pyprof
 RUN pip install --no-cache-dir .
+
+# Generating the docs requires the docs source so copy that into the L0_docs so 
+# that it is available when the test runs.
+RUN cp VERSION qa/L0_docs/. && \
+    cp README.rst qa/L0_docs/. && \
+    cp -r docs qa/L0_docs/.
+    

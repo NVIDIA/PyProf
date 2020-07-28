@@ -24,6 +24,7 @@ SKIP_EXTS = ('jpeg', 'jpg', 'pgm', 'png',
              'preprocessed', 'jmx', 'gz',
              'caffemodel', 'json')
 SKIP_PATHS = ('requirements.txt',
+              'qa/L0_docs/VERSION',
               'LICENSE',
               'VERSION')
 
