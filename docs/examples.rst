@@ -20,9 +20,6 @@ Examples
 
 This section provides several real examples on how to profile with PyPRrof.
 
-  *TODO:* Provide real examples. Everything here should also be added to
-  a QA L0_ test to lock in the code
-
 Navigate to the lenet example. ::
 
   $ cd pyprof/examples

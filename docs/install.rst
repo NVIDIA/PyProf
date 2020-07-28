@@ -39,5 +39,5 @@ Installing from GitHub
 
    $ pip list | grep pyprof 
 
-* Should display ``pyprof x.y`` where ``x.y`` is the PyProf version installed.
+* Should display ``pyprof 3.2.0``.
     
