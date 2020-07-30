@@ -18,9 +18,6 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **PRE-RELEASE: You are currently on the r20.07 branch which tracks
-    stabilization towards the new release.**
-
 .. overview-begin-marker-do-not-remove
 
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
