@@ -64,6 +64,56 @@ the PyTorch container on `NVIDIA GPU Cloud (NGC) <https://ngc.nvidia.com>`_. The
 branch for this release is `r20.07
 <https://github.com/NVIDIA/PyProf/tree/r20.07>`_.
 
+Quick Installation Instructions
+-------------------------------
+
+.. quick-install-start-marker-do-not-remove
+
+* Clone the git repository ::
+    
+    $ git clone https://github.com/NVIDIA/PyProf.git
+
+* Navigate to the top level PyProf directory
+
+* Install PyProf ::
+
+   $ pip install .
+
+* Verify installation is complete with pip list ::
+
+   $ pip list | grep pyprof 
+
+* Should display ::
+
+   pyprof            3.3.0.dev0
+
+.. quick-install-end-marker-do-not-remove
+
+Quick Start Instructions
+------------------------
+
+.. quick-start-start-marker-do-not-remove
+
+* Add the following lines to the PyTorch network you want to profile: ::
+
+    import torch.cuda.profiler as profiler
+    import pyprof
+    pyprof.init()
+
+* Profile with NVProf or Nsight Systems to generate a SQL file. ::
+
+    $ nsys profile -f true -o net --export sqlite python net.py
+
+* Run the parse.py script to generate the dictionary. ::
+  
+    $ python -m pyprof.parse net.sqlite > net.dict
+
+* Run the prof.py script to generate the reports. ::
+
+    $ python -m pyprof.prof --csv net.dict
+
+.. quick-start-end-marker-do-not-remove
+
 Documentation
 -------------
 

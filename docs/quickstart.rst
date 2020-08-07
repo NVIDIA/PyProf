@@ -44,21 +44,6 @@ for details on how to install from GitHub
 Profile with PyProf
 -------------------
 
-Add the following lines to the PyTorch network you want to profile: ::
-
-  import torch.cuda.profiler as profiler
-  import pyprof
-  pyprof.init()
-
-Profile with NVProf or Nsight Systems to generate a SQL file. ::
-
-  $ nsys profile -f true -o net --export sqlite python net.py
-
-Run the parse.py script to generate the dictionary. ::
-  
-  $ python -m pyprof.parse net.sqlite > net.dict
-
-Run the prof.py script to generate the reports. ::
-
-  $ python -m pyprof.prof --csv net.dict
-
+.. include:: ../README.rst
+   :start-after: quick-start-start-marker-do-not-remove
+   :end-before: quick-start-end-marker-do-not-remove
