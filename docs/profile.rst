@@ -102,8 +102,8 @@ Profile with NVIDIA Profilers
 -----------------------------
 
 After modifying the PyTorch script to improt pyprof, you will need to use either 
-NVProf or Nsight System to profile the performance. Both profiler will output
-a SQLite database containing the results of the profile.
+NVProf or Nsight Systems to profile the performance. Both profilers will output
+an SQLite database containing the results of the profile.
 
 Please note that NVProf is currently being phased out, and it is recommend to 
 use Nsight Systems to future proof the profile process.
