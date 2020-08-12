@@ -45,7 +45,7 @@ For users other than DGX, follow the `nvidia-docker installation
 documentation <https://github.com/NVIDIA/nvidia-docker>`_ to install
 the most recent version of CUDA, Docker, and nvidia-docker.
 
-After performing the above setup, you can pull the Triton container
+After performing the above setup, you can pull the PyProf container
 using the following command::
 
   docker pull nvcr.io/nvidia/pytorch:20.07-py3

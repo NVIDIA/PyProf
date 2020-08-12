@@ -18,7 +18,7 @@
 Quickstart
 ==========
 
-PyProf is available in following ways:
+PyProf is available in the following ways:
 
 * As :ref:`installable python code located in GitHub <section-installing-from-github>`.
 
@@ -37,7 +37,7 @@ Prerequisites
   container, you will need to clone the PyProf GitHub repo. Go to 
   https://github.com/NVIDIA/PyProf and then select the *clone* or *download* 
   drop down button. After cloning the repo be sure to select the r<xx.yy> 
-  release branch that corresponds to the version of Triton want to use::
+  release branch that corresponds to the version of PyProf want to use::
 
   $ git checkout r20.07
 
@@ -52,7 +52,7 @@ Prerequisites
 Using a Prebuilt Docker Containers
 ----------------------------------
 
-Use docker pull to get the PyTorch container froim NGC::
+Use docker pull to get the PyTorch container from NGC::
 
   $ docker pull nvcr.io/nvidia/pytorch:<xx.yy>-py3
 
