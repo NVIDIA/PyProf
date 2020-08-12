@@ -32,5 +32,6 @@ NVIDIA PyProf - Pytorch Profiler
    quickstart
    install
    profile
+   advanced
    examples
    faqs
