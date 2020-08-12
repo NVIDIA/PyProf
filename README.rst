@@ -118,11 +118,26 @@ Documentation
 -------------
 
 The User Guide can be found in the 
-`PyProf docs folder <https://github.com/NVIDIA/PyProf/blob/master/docs>`_, and 
+`documentation for current release 
+<https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/index.html>`_, and 
 provides instructions on how to install and profile with PyProf.
 
-An `FAQ <https://github.com/NVIDIA/PyProf/blob/master/docs/faqs.rst>`_ provides
+A complete `Quick Start Guide <https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/quickstart.html>`_ 
+provides step-by-step instructions to get you quickly started using PyProf.
+
+An `FAQ <https://docs.nvidia.com/deeplearning/frameworks/pyprof-user-guide/faqs.html>`_ provides
 answers for frequently asked questions.
+
+The `Release Notes 
+<https://docs.nvidia.com/deeplearning/frameworks/pyprof-release-notes/index.html>`_
+indicate the required versions of the NVIDIA Driver and CUDA, and also describe 
+which GPUs are supported by PyProf
+
+Presentation and Papers
+^^^^^^^^^^^^^^^^^^^^^^^
+
+* `Automating End-toEnd PyTorch Profiling <https://developer.nvidia.com/gtc/2020/video/s21143>`_.
+   * `Presentation slides <https://developer.download.nvidia.com/video/gputechconf/gtc/2020/presentations/s21143-automating-end-to-end-pytorch-profiling.pdf>`_.
 
 Contributing
 ------------
