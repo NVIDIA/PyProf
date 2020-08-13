@@ -18,24 +18,30 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **NOTE: Our forward-backward kernel correlation heuristics are not working correctly 
-    with PyTorch v1.6. We are working to resolve it. In the mean time, please use Pytorch 
-    1.5 or the 20.03 NGC container, which you can retrieve via:** ::
-
-      docker pull http://nvcr.io/nvidia/pytorch:20.03-py3
-
-    **LATEST RELEASE: You are currently working on the master branch which
-    tracks under-development progress towards the next release. The
-    latest release of the PyProf is 3.2.0 and is available on branch** `r20.07
-    <https://github.com/NVIDIA/PyProf/blob/r20.07>`_.
-
 .. overview-begin-marker-do-not-remove
 
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
 models. PyProf aggregates kernel performance from `Nsight Systems
 <https://developer.nvidia.com/nsight-systems>`_ or `NvProf
-<https://developer.nvidia.com/nvidia-visual-profiler>`_ and provides the 
-following additional features:
+<https://developer.nvidia.com/nvidia-visual-profiler>`_.
+
+What's New in 3.4.0
+-------------------
+
+* README and User Guide documentation has been updated with more installation 
+  options and pointers
+
+Known Issues
+------------
+
+* Forward-Backward kernel correlation heuristics do not work correctly with 
+  PyTorch 1.6. Recommended work arounds include:
+
+  * Use with PyTorch 1.5
+  * Use DLProf in the `20.09 NGC Pytorch container <https://ngc.nvidia.com/catalog/containers/nvidia:pytorch>`_
+
+Features
+--------
 
 * Identifies the layer that launched a kernel: e.g. the association of 
   `ComputeOffsetsKernel` with a concrete PyTorch layer or API is not obvious.
@@ -59,10 +65,10 @@ following additional features:
 
 .. overview-end-marker-do-not-remove
 
-The current release of PyProf is 3.1.0 and is available in the 20.07 release of
+The current release of PyProf is 3.4.0 and is available in the 20.09 release of
 the PyTorch container on `NVIDIA GPU Cloud (NGC) <https://ngc.nvidia.com>`_. The 
-branch for this release is `r20.07
-<https://github.com/NVIDIA/PyProf/tree/r20.07>`_.
+branch for this release is `r20.09
+<https://github.com/NVIDIA/PyProf/tree/r20.09>`_.
 
 Quick Installation Instructions
 -------------------------------
