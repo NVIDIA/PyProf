@@ -205,7 +205,9 @@ def traceMarker(op_name):
                     fn_name = ins_frame.f_locals['self'].__class__.__name__ + "::" + fn_name
 
 
-            key = (func_stack, frame.name)
+            key = (func_stack, frame.name,"")
+            if (fn_name in ["wrapper_func", "always_benchmark_wrapper"]):
+                key = (func_stack, frame.name, op_name)
 
             if key not in func_map.keys():
                 func_map[key] = {}
