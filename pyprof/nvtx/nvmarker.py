@@ -168,10 +168,11 @@ def traceMarker(op_name):
             # Build traceMarker
             #
 
-            # Don't include any functions in this file
+            # Don't include any functions from this file (nvmarker.py)
+            # Also skip repeated back to back cases of the same file/line (recursive calls)
             #
             fnl = "{}:{}".format(frame.filename, frame.lineno)
-            if (not frame.filename.endswith("nvmarker.py")):
+            if (not frame.filename.endswith("nvmarker.py") and fnl != prev_fnl):
                 cadena.append(fnl)
 
             # Early exit if we aren't doing any funcStack code
