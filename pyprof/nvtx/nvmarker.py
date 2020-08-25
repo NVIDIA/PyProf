@@ -183,26 +183,24 @@ def traceMarker(op_name):
             #
             fn_name = frame.name
 
-            # Capture class name for any special class functions
+            # Capture class name
             #
-            if (frame.name.startswith("__")):
+            # Iterate through the stack frames (like a linked list) until we get
+            # to the detailed frame we want. This is much faster and less
+            # expensive than extracting the entire frame stack every time
+            #
+            # ins stack is backwards from traceback, so depth is inverse 
+            # of current traceback depth
+            #
+            depth = len(stack) - i
+            ins_frame = ins.currentframe()
+            for _ in range(1,depth):
+                ins_frame = ins_frame.f_back
 
-                # Iterate through the stack frames (like a linked list) until we get
-                # to the detailed frame we want. This is much faster and less
-                # expensive than extracting the entire frame stack every time
-                #
-                # ins stack is backwards from traceback, so depth is inverse 
-                # of current traceback depth
-                #
-                depth = len(stack) - i
-                ins_frame = ins.currentframe()
-                for _ in range(1,depth):
-                    ins_frame = ins_frame.f_back
-
-                # Grab the class name if it exists
-                #
-                if 'self' in ins_frame.f_locals:
-                    fn_name = ins_frame.f_locals['self'].__class__.__name__ + "::" + fn_name
+            # Grab the class name if it exists
+            #
+            if 'self' in ins_frame.f_locals:
+                fn_name = ins_frame.f_locals['self'].__class__.__name__ + "::" + fn_name
 
 
             key = (func_stack, frame.name,"")
