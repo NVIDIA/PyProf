@@ -42,6 +42,12 @@ import math
 import json
 from .config import Config
 
+# Flag to indicate if wrapper_func() should inject nvtx or 
+# just execute the wrapped function. This is used to stop
+# recursion where turning the input args into a string ends up
+# executing another wrapped function
+#
+wrappers_enabled = True
 
 def isfunc(mod, f):
     assert hasattr(mod, f)
@@ -273,31 +279,39 @@ def add_wrapper(mod, fn_name):
                                        ) and (type(mod) is not torch.jit.TopLevelTracedModule)
 
     def wrapper_func(*args, **kwargs):
+        global wrappers_enabled
 
-        # Push trace marker
-        nvtx.range_push(traceMarker(fn_name))
+        if (wrappers_enabled):
+            # Push trace marker
+            nvtx.range_push(traceMarker(fn_name))
 
-        # Push module marker
-        if s:
-            m = modMarker(mod, fn_name, args)
-            nvtx.range_push(m)
+            # Push module marker
+            if s:
+                m = modMarker(mod, fn_name, args)
+                nvtx.range_push(m)
 
-        # Create and push argument marker
-        cadena = argMarker(mod, fn_name, args, kwargs)
-        nvtx.range_push(cadena)
+            # Create and push argument marker
+            #
+            # Disable wrappers while getting the argMarker in case it
+            # ends up executing another wrapped function
+            wrappers_enabled = False
+            cadena = argMarker(mod, fn_name, args, kwargs)
+            nvtx.range_push(cadena)
+            wrappers_enabled = True
 
         # Call the original function
         result = func(*args, **kwargs)
 
-        # Pop argumet marker
-        nvtx.range_pop()
-
-        # Pop module marker
-        if s:
+        if (wrappers_enabled):
+            # Pop argumet marker
             nvtx.range_pop()
 
-        # Pop trace marker
-        nvtx.range_pop()
+            # Pop module marker
+            if s:
+                nvtx.range_pop()
+
+            # Pop trace marker
+            nvtx.range_pop()
 
         return result
 
