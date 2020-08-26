@@ -42,12 +42,27 @@ import math
 import json
 from .config import Config
 
-# Flag to indicate if wrapper_func() should inject nvtx or 
+# Global state variables
+call_id = 0
+capture_input_ops = 1
+patch_list = []  ## Keep track of nested calls to wrapper
+op_to_out_tensor_map = {}
+# Flag to indicate if wrapper_func() should inject nvtx or
 # just execute the wrapped function. This is used to stop
 # recursion where turning the input args into a string ends up
 # executing another wrapped function
-#
 wrappers_enabled = True
+
+
+def start_ptr_data():
+    global capture_input_ops
+    capture_input_ops = 1
+
+
+def stop_ptr_data():
+    global capture_input_ops
+    capture_input_ops = 0
+
 
 def isfunc(mod, f):
     assert hasattr(mod, f)
@@ -69,7 +84,7 @@ def isfunc(mod, f):
     ]
 
     #Add functions to this list if they cause recursion
-    ignore += ['size', 'tolist', 'dim', 'is_storage', 'item']
+    ignore += ['size', 'tolist', 'dim', 'is_storage', 'item', 'data_ptr']
     if f in ignore:
         return False
 
@@ -82,6 +97,7 @@ def isfunc(mod, f):
 #
 func_map = {}
 
+
 # Returns a dict string with a tracemarker and function stack in it
 #
 def traceMarker(op_name):
@@ -90,13 +106,13 @@ def traceMarker(op_name):
     # Return True if the name in the hierarchy should be skipped
     #
     def should_skip_frame_name(name, prev_name):
-        # __call__:  
+        # __call__:
         #    Much of Torch library is implemented in this way. Ignore these extra layers
-        # wrapper_func and always_benchmark_warpper: 
-        #    Are functions in this file. If there are nested monkeypatched functions 
+        # wrapper_func and always_benchmark_warpper:
+        #    Are functions in this file. If there are nested monkeypatched functions
         #    we don't want it to show up
-        # <*>: 
-        #    Things like <module>, <genexpr>, <lamba> which don't add any information 
+        # <*>:
+        #    Things like <module>, <genexpr>, <lamba> which don't add any information
         #    and break html
         # name==prev_name:
         #    Remove back-to-back duplicates of the same function name.
@@ -111,13 +127,13 @@ def traceMarker(op_name):
                 return True
         if name.startswith("<") and name.endswith(">"):
             return True
-        if name==prev_name:
+        if name == prev_name:
             return True
         return False
 
-    # Given a function stack, clean it up to remove unwanted fields as 
+    # Given a function stack, clean it up to remove unwanted fields as
     # well as removing any back-to-back duplicates
-    # 
+    #
     def cleanup_func_stack(func_stack, op_name):
 
         ret = ""
@@ -127,7 +143,7 @@ def traceMarker(op_name):
         x = func_stack.split("/")
         for fn_name in x:
 
-            # This is used to detect when the same torch op was called 
+            # This is used to detect when the same torch op was called
             # multiple times from the same parent function. Capture the
             # count as a 'suffix' and put it on the end of the op name
             #
@@ -137,14 +153,14 @@ def traceMarker(op_name):
             # Both would end up as a/b/c after the wrapper function is ignored
             # However, we want to keep the information that the resulting torch op
             # called by wrapper_func was called 2 different times from the same function 'c'
-            # 
-            # This code changes "wrapper_func(2)" to "(2)" so that it doesn't get filtered 
+            #
+            # This code changes "wrapper_func(2)" to "(2)" so that it doesn't get filtered
             # out by should_skip_frame_name()
             #
             if fn_name.startswith("wrapper_func("):
-                suffix = fn_name.replace("wrapper_func","")
+                suffix = fn_name.replace("wrapper_func", "")
             if fn_name.startswith("always_benchmark_wrapper("):
-                suffix = fn_name.replace("always_benchmark_wrapper","")
+                suffix = fn_name.replace("always_benchmark_wrapper", "")
 
             if not should_skip_frame_name(fn_name, prev_fn_name):
                 ret += "/" + fn_name
@@ -159,10 +175,10 @@ def traceMarker(op_name):
         stack = traceback.extract_stack()
         func_stack = ""
 
-        # Previous frame name and line. This is the file and line 
+        # Previous frame name and line. This is the file and line
         # that CALLED the frame we are in
         #
-        prev_fnl = "" 
+        prev_fnl = ""
 
         # Starting at index of 2 to ignore this function and its parent (traceMarker).
         # Intentionally leaving in wrapper_func and other functions in this file as they
@@ -192,6 +208,7 @@ def traceMarker(op_name):
 
             # Capture class name
             #
+<<<<<<< HEAD
             # Iterate through the stack frames (like a linked list) until we get
             # to the detailed frame we want. This is much faster and less
             # expensive than extracting the entire frame stack every time
@@ -203,27 +220,41 @@ def traceMarker(op_name):
             ins_frame = ins.currentframe()
             for _ in range(1,depth):
                 ins_frame = ins_frame.f_back
+=======
+            if (frame.name.startswith("__")):
+
+                # Iterate through the stack frames (like a linked list) until we get
+                # to the detailed frame we want. This is much faster and less
+                # expensive than extracting the entire frame stack every time
+                #
+                # ins stack is backwards from traceback, so depth is inverse
+                # of current traceback depth
+                #
+                depth = len(stack) - i
+                ins_frame = ins.currentframe()
+                for _ in range(1, depth):
+                    ins_frame = ins_frame.f_back
+>>>>>>> Add initial flag support
 
             # Grab the class name if it exists
             #
             if 'self' in ins_frame.f_locals:
                 fn_name = ins_frame.f_locals['self'].__class__.__name__ + "::" + fn_name
 
-
-            key = (func_stack, frame.name,"")
+            key = (func_stack, frame.name, "")
             if (fn_name in ["wrapper_func", "always_benchmark_wrapper"]):
                 key = (func_stack, frame.name, op_name)
 
             if key not in func_map.keys():
                 func_map[key] = {}
 
-            # If we have been to this stack depth with all the same 
+            # If we have been to this stack depth with all the same
             # information, use the stored name
-            #            
+            #
             if prev_fnl in func_map[key].keys():
                 fn_name = func_map[key][prev_fnl]
             else:
-                # If we have been do this stack depth and have called 
+                # If we have been do this stack depth and have called
                 # this function at least once but didn't hit in the dict
                 # above, then this is a repeat call. Postpend a count
                 # to the fn_name to uniquify it
@@ -231,13 +262,13 @@ def traceMarker(op_name):
                 if len(func_map[key]) > 0:
                     fn_name = fn_name + "(" + str(1 + len(func_map[key])) + ")"
 
-                # Store this new unique stack information with the 
+                # Store this new unique stack information with the
                 # determined fn_name
                 #
-                func_map[key][prev_fnl] = fn_name    
+                func_map[key][prev_fnl] = fn_name
             prev_fnl = fnl
 
-            # Append this frame's info into the function stack    
+            # Append this frame's info into the function stack
             #
             func_stack = func_stack + "/" + fn_name
 
@@ -274,11 +305,60 @@ def add_wrapper(mod, fn_name):
 
     # Check if the mod has a string representation
     # and is not a Script or Traced module (used by JIT)
+    # yapf: disable
     s = hasattr(mod, "extra_repr") and (type(mod) is not torch.jit.ScriptModule
                                        ) and (type(mod) is not torch.jit.TopLevelTracedModule)
+    # yapf: enable
 
     def wrapper_func(*args, **kwargs):
         global wrappers_enabled
+        global call_id
+        global op_to_out_tensor_map
+        global patch_list
+        global capture_input_ops
+
+        patch_list.append(call_id)
+        input_callid_list = []
+        if capture_input_ops:
+            input_tensors = []
+            for arg in args:
+                if isinstance(arg, torch.Tensor):
+                    input_tensors.append(
+                        {
+                            'ptr': arg.data_ptr(),
+                            'grad_fn': str(arg.grad_fn),
+                            'grad_exists': (arg.grad is not None),
+                            'shape': str(arg.shape)
+                        }
+                    )
+                elif isinstance(arg, list) or isinstance(arg, tuple):
+                    for item in arg:
+                        if isinstance(item, torch.Tensor):
+                            input_tensors.append(
+                                {
+                                    'ptr': item.data_ptr(),
+                                    'grad_fn': str(item.grad_fn),
+                                    'grad_exists': (item.grad is not None),
+                                    'shape': str(item.shape)
+                                }
+                            )
+                            if isinstance(item, list) or isinstance(item, tuple):
+                                for item2 in item:
+                                    if isinstance(item2, torch.Tensor):
+                                        input_tensors.append(
+                                            {
+                                                'ptr': item2.data_ptr(),
+                                                'grad_fn': str(item2.grad_fn),
+                                                'grad_exists': (item2.grad is not None),
+                                                'shape': str(item2.shape)
+                                            }
+                                        )
+            for input_id, _ in enumerate(input_tensors):
+                input_ptr = input_tensors[input_id]['ptr']
+                if input_ptr in op_to_out_tensor_map:
+                    input_callid_info = op_to_out_tensor_map[input_ptr]
+                    if input_callid_info not in input_callid_list:
+                        input_callid_list.append(input_callid_info)
 
         if (wrappers_enabled):
             # Push trace marker
@@ -294,7 +374,10 @@ def add_wrapper(mod, fn_name):
             # Disable wrappers while getting the argMarker in case it
             # ends up executing another wrapped function
             wrappers_enabled = False
-            cadena = argMarker(mod, fn_name, args, kwargs)
+            saved_call_id = call_id
+            if call_id != patch_list[0]:
+                saved_call_id = patch_list[0]
+            cadena = argMarker(mod, fn_name, args, kwargs, saved_call_id, input_callid_list)
             nvtx.range_push(cadena)
             wrappers_enabled = True
 
@@ -312,12 +395,42 @@ def add_wrapper(mod, fn_name):
             # Pop trace marker
             nvtx.range_pop()
 
+            if capture_input_ops:
+                output_tensors = []
+                if isinstance(result, torch.Tensor):
+                    output_tensors.append(
+                        {
+                            'ptr': result.data_ptr(),
+                            'grad_fn': str(result.grad_fn),
+                            'grad_exists': (result.grad is not None),
+                            'shape': str(result.shape)
+                        }
+                    )
+                elif isinstance(result, list) or isinstance(result, tuple):
+                    for item in result:
+                        if isinstance(item, torch.Tensor):
+                            output_tensors.append(
+                                {
+                                    'ptr': item.data_ptr(),
+                                    'grad_fn': str(item.grad_fn),
+                                    'grad_exists': (item.grad is not None),
+                                    'shape': str(item.shape)
+                                }
+                            )
+                saved_call_id = call_id
+                if call_id != patch_list[0]:
+                    saved_call_id = patch_list[0]
+                for out_port, _ in enumerate(output_tensors):
+                    output_ptr = output_tensors[out_port]['ptr']
+                    op_to_out_tensor_map[output_ptr] = "{}:{}".format(saved_call_id, out_port)
+
+        call_id = call_id + 1
         return result
 
     setattr(mod, fn_name, wrapper_func)
 
 
-def argMarker(mod, op, args, kwargs):
+def argMarker(mod, op, args, kwargs, idx, inputid_list):
     #For this function args is a tuple and kwargs is a dict
 
     def tensor(arg, name=""):
@@ -400,6 +513,8 @@ def argMarker(mod, op, args, kwargs):
     cadena = {}
     cadena['mod'] = mod.__name__
     cadena['op'] = op
+    cadena['callid'] = idx
+    cadena['input_callids'] = inputid_list
     cadena['args'] = []
 
     foo(args, "")
@@ -413,6 +528,7 @@ def patchClass(cls):
     for f in dir(cls):
         if isfunc(cls, f):
             add_wrapper(cls, f)
+
 
 def patch_torch_classes():
     """Monkey-patch all classes in torch"""
@@ -448,10 +564,10 @@ def patch_dataloader():
         for x in old_iter(self, *args, **kwargs):
 
             # Pop tracemarker
-            nvtx.range_pop();           
+            nvtx.range_pop()
 
             # Dataloader stop, Model start
-            nvtx.range_pop() 
+            nvtx.range_pop()
 
             yield x
 
@@ -467,6 +583,7 @@ def patch_dataloader():
         nvtx.range_pop()
 
     mod.DataLoader.__iter__ = new_iter
+
 
 def patch_apex():
     """Monkey-patch functions in APEX"""
@@ -503,7 +620,7 @@ def patch_dataloader_init():
 
     def new_init(self, *args, **kwargs):
 
-        num_workers = kwargs.get("num_workers",0)
+        num_workers = kwargs.get("num_workers", 0)
         pin_memory = kwargs.get("pin_memory", False)
 
         push_nvtx_model_config({"num_workers": num_workers, "pin_memory": pin_memory})
@@ -516,6 +633,7 @@ def patch_dataloader_init():
 # Flag to indicate that cudnn_benchmark_disabled has already been reported
 #
 cudnn_benchmark_disabled_reported = False
+
 
 def patch_with_always_benchmark(mod, fn_name):
     """
@@ -575,7 +693,7 @@ def patch_never_call_with_args(mod, fn_name, key, bad_args):
         bound.apply_defaults()
 
         problem = False
-        for k,v in bound.arguments.items():
+        for k, v in bound.arguments.items():
             if k in bad_args:
                 if v in bad_args[k]:
                     problem = True
