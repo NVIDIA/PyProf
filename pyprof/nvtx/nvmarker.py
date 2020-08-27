@@ -375,8 +375,9 @@ def add_wrapper(mod, fn_name):
             # ends up executing another wrapped function
             wrappers_enabled = False
             saved_call_id = call_id
-            if call_id != patch_list[0]:
-                saved_call_id = patch_list[0]
+            #TODO(DEB) - verify that this change is okay
+            # if call_id != patch_list[0]:
+            #     saved_call_id = patch_list[0]
             cadena = argMarker(mod, fn_name, args, kwargs, saved_call_id, input_callid_list)
             nvtx.range_push(cadena)
             wrappers_enabled = True
@@ -418,11 +419,14 @@ def add_wrapper(mod, fn_name):
                                 }
                             )
                 saved_call_id = call_id
-                if call_id != patch_list[0]:
-                    saved_call_id = patch_list[0]
+                #TODO(DEB) - verify that this change is okay
+                # if call_id != patch_list[0]:
+                #     saved_call_id = patch_list[0]
                 for out_port, _ in enumerate(output_tensors):
                     output_ptr = output_tensors[out_port]['ptr']
-                    op_to_out_tensor_map[output_ptr] = "{}:{}".format(saved_call_id, out_port)
+                    op_to_out_tensor_map[output_ptr] = "{}".format(saved_call_id)
+                    #TODO(DEB) - verify that this change is okay
+                    # op_to_out_tensor_map[output_ptr] = "{}:{}".format(saved_call_id, out_port)
 
         call_id = call_id + 1
         return result
@@ -430,7 +434,7 @@ def add_wrapper(mod, fn_name):
     setattr(mod, fn_name, wrapper_func)
 
 
-def argMarker(mod, op, args, kwargs, idx, inputid_list):
+def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     #For this function args is a tuple and kwargs is a dict
 
     def tensor(arg, name=""):
