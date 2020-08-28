@@ -737,8 +737,8 @@ def init(**kwargs):
     Kwargs:
         enable_function_stack (bool): When true, function stack information will be added to NVTX markers
     """
-    #TODO(DEB) - verify this is correct
-    # config = Config(**kwargs)
+
+    config = Config(**kwargs)
 
     print("Initializing NVTX monkey patches")
 

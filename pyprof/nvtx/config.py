@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 class Config:
     __instance = None
 
@@ -23,10 +24,11 @@ class Config:
         if Config.__instance == None:
             Config()
         return Config.__instance
-    
+
     def __init__(self, **kwargs):
         if Config.__instance != None:
             raise Exception("This is a singleton")
         else:
             Config.__instance = self
             self.func_stack_enabled = kwargs.get("enable_function_stack", False)
+            self.capture_input_ops = kwargs.get("capture_input_ops", False)
