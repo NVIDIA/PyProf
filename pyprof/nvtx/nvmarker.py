@@ -44,7 +44,6 @@ from .config import Config
 
 # Global state variables
 call_id = 0
-capture_input_ops = 1
 patch_list = []  ## Keep track of nested calls to wrapper
 op_to_out_tensor_map = {}
 # Flag to indicate if wrapper_func() should inject nvtx or
@@ -52,16 +51,6 @@ op_to_out_tensor_map = {}
 # recursion where turning the input args into a string ends up
 # executing another wrapped function
 wrappers_enabled = True
-
-
-def start_ptr_data():
-    global capture_input_ops
-    capture_input_ops = 1
-
-
-def stop_ptr_data():
-    global capture_input_ops
-    capture_input_ops = 0
 
 
 def isfunc(mod, f):
@@ -300,6 +289,8 @@ def modMarker(mod, fn_name, args):
 def add_wrapper(mod, fn_name):
     assert isfunc(mod, fn_name)
 
+    config = Config.getInstance()
+
     # Get a pointer to the original function
     func = getattr(mod, fn_name)
 
@@ -315,11 +306,10 @@ def add_wrapper(mod, fn_name):
         global call_id
         global op_to_out_tensor_map
         global patch_list
-        global capture_input_ops
 
         patch_list.append(call_id)
         input_callid_list = []
-        if capture_input_ops:
+        if config.capture_input_ops:
             input_tensors = []
             for arg in args:
                 if isinstance(arg, torch.Tensor):
@@ -360,7 +350,7 @@ def add_wrapper(mod, fn_name):
                     if input_callid_info not in input_callid_list:
                         input_callid_list.append(input_callid_info)
 
-        if (wrappers_enabled):
+        if wrappers_enabled:
             # Push trace marker
             nvtx.range_push(traceMarker(fn_name))
 
@@ -385,7 +375,7 @@ def add_wrapper(mod, fn_name):
         # Call the original function
         result = func(*args, **kwargs)
 
-        if (wrappers_enabled):
+        if wrappers_enabled:
             # Pop argumet marker
             nvtx.range_pop()
 
@@ -396,7 +386,7 @@ def add_wrapper(mod, fn_name):
             # Pop trace marker
             nvtx.range_pop()
 
-            if capture_input_ops:
+            if config.capture_input_ops:
                 output_tensors = []
                 if isinstance(result, torch.Tensor):
                     output_tensors.append(
@@ -747,8 +737,8 @@ def init(**kwargs):
     Kwargs:
         enable_function_stack (bool): When true, function stack information will be added to NVTX markers
     """
-
-    config = Config(**kwargs)
+    #TODO(DEB) - verify this is correct
+    # config = Config(**kwargs)
 
     print("Initializing NVTX monkey patches")
 
