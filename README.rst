@@ -18,9 +18,6 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **PRE-RELEASE: You are currently on the r20.08 branch which tracks
-    stabilization towards the new release.**
-
 .. overview-begin-marker-do-not-remove
 
 PyProf is a tool that profiles and analyzes the GPU performance of PyTorch
@@ -39,6 +36,14 @@ What's New in 3.3.0
 
    pyprof.init(enable_function_stack=True)
 
+Known Issues
+------------
+
+* Forward-Backward kernel correlation heuristics do not work correctly with 
+  PyTorch 1.6. Recommended work arounds include:
+
+  * Use with PyTorch 1.5
+  * Use DLProf in the `20.08 NGC Pytorch container <https://ngc.nvidia.com/catalog/containers/nvidia:pytorch>`_
 
 Features
 --------
