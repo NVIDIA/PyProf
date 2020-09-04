@@ -51,7 +51,8 @@ op_to_out_tensor_map = {}
 # recursion where turning the input args into a string ends up
 # executing another wrapped function
 wrappers_enabled = True
-op_lookup = {}
+# Map from call_id to op name
+call_id_to_op_map = {}
 
 
 def isfunc(mod, f):
@@ -77,9 +78,6 @@ def isfunc(mod, f):
     ignore += ['size', 'tolist', 'dim', 'is_storage', 'item', 'data_ptr']
     if f in ignore:
         return False
-    #TODO(DEB) remove
-    # if ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr):
-    #     print(f"Patched: {mod}.{f}")
     return ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr)
 
 
@@ -309,7 +307,7 @@ def add_wrapper(mod, fn_name):
         global call_id
         global op_to_out_tensor_map
         global patch_list
-        global op_lookup
+        global call_id_to_op_map
 
         patch_list.append(call_id)
         input_callid_list = []
@@ -361,13 +359,6 @@ def add_wrapper(mod, fn_name):
             traceMarker_str = traceMarker_str.replace("\'", "\"")
             traceMarker_dict = json.loads(traceMarker_str)
 
-            op_name = ""
-            if config.func_stack_enabled:
-                op_name = traceMarker_dict['funcStack']
-
-            # op_lookup[call_id] = traceMarker_dict['funcStack']
-            # print(f"Callid: {call_id}\tOp: {op_name}")
-
             # Push module marker
             if s:
                 m = modMarker(mod, fn_name, args)
@@ -378,11 +369,7 @@ def add_wrapper(mod, fn_name):
             # Disable wrappers while getting the argMarker in case it
             # ends up executing another wrapped function
             wrappers_enabled = False
-            saved_call_id = call_id
-            #TODO(DEB) - verify that this change is okay
-            # if call_id != patch_list[0]:
-            #     saved_call_id = patch_list[0]
-            cadena = argMarker(mod, fn_name, args, kwargs, op_name, saved_call_id, input_callid_list)
+            cadena = argMarker(mod, fn_name, args, kwargs, call_id, input_callid_list)
             nvtx.range_push(cadena)
             wrappers_enabled = True
 
@@ -422,38 +409,26 @@ def add_wrapper(mod, fn_name):
                                     'shape': str(item.shape)
                                 }
                             )
-                saved_call_id = call_id
-                #TODO(DEB) - verify that this change is okay
-                # if call_id != patch_list[0]:
-                #     saved_call_id = patch_list[0]
                 for out_port, _ in enumerate(output_tensors):
                     output_ptr = output_tensors[out_port]['ptr']
-                    op_to_out_tensor_map[output_ptr] = "{}".format(saved_call_id)
-                    print(f"Output_ptr: {output_ptr}")
-                    print(f"Saved_call_id: {saved_call_id}")
-                    #TODO(DEB) - verify that this change is okay
-                    # op_to_out_tensor_map[output_ptr] = "{}:{}".format(saved_call_id, out_port)
-        op_lookup[call_id] = traceMarker_dict['funcStack']
-        print(f"Callid: {call_id}\tOp: {op_name}")
+                    op_to_out_tensor_map[output_ptr] = "{}".format(call_id)
+        # Store the callid -> op_name mapping
+        if config.func_stack_enabled:
+            call_id_to_op_map[call_id] = traceMarker_dict['funcStack']
         call_id = call_id + 1
         return result
 
     setattr(mod, fn_name, wrapper_func)
 
 
-def argMarker(mod, op, args, kwargs, op_name="", idx=-1, inputid_list=[]):
+def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     #For this function args is a tuple and kwargs is a dict
-    global op_lookup
+    global call_id_to_op_map
     global op_to_out_tensor_map
 
     def tensor(arg, name=""):
         cid = op_to_out_tensor_map.get(arg.data_ptr(), -1)
-        print(f"Inside tensor - callid: {cid}")
-        print(f"type of cid: {type(cid)}")
-        name = op_lookup.get(int(cid), "")
-        if not name == "":
-            print(f"Found input tensor name!")
-        print(f"Inside tensor - op_name: {name}")
+        name = call_id_to_op_map.get(int(cid), "")
         a = {}
         a['name'] = name
         a['type'] = "tensor"
@@ -537,7 +512,7 @@ def argMarker(mod, op, args, kwargs, op_name="", idx=-1, inputid_list=[]):
     cadena['input_callids'] = inputid_list
     cadena['args'] = []
 
-    foo(args, op_name)
+    foo(args, "")
     for k, v in kwargs.items():
         foo((v, ), k)
 
