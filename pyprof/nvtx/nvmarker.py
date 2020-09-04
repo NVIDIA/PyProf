@@ -198,33 +198,17 @@ def traceMarker(op_name):
 
             # Capture class name
             #
-<<<<<<< HEAD
             # Iterate through the stack frames (like a linked list) until we get
             # to the detailed frame we want. This is much faster and less
             # expensive than extracting the entire frame stack every time
             #
-            # ins stack is backwards from traceback, so depth is inverse 
+            # ins stack is backwards from traceback, so depth is inverse
             # of current traceback depth
             #
             depth = len(stack) - i
             ins_frame = ins.currentframe()
-            for _ in range(1,depth):
+            for _ in range(1, depth):
                 ins_frame = ins_frame.f_back
-=======
-            if (frame.name.startswith("__")):
-
-                # Iterate through the stack frames (like a linked list) until we get
-                # to the detailed frame we want. This is much faster and less
-                # expensive than extracting the entire frame stack every time
-                #
-                # ins stack is backwards from traceback, so depth is inverse
-                # of current traceback depth
-                #
-                depth = len(stack) - i
-                ins_frame = ins.currentframe()
-                for _ in range(1, depth):
-                    ins_frame = ins_frame.f_back
->>>>>>> Add initial flag support
 
             # Grab the class name if it exists
             #
@@ -288,7 +272,6 @@ def modMarker(mod, fn_name, args):
 
 
 def add_wrapper(mod, fn_name):
-    # assert isfunc(mod, fn_name)
 
     config = Config.getInstance()
 
@@ -302,6 +285,73 @@ def add_wrapper(mod, fn_name):
                                        ) and (type(mod) is not torch.jit.TopLevelTracedModule)
     # yapf: enable
 
+    def capture_inputs(input_callid_list, *args):
+        input_tensors = []
+        for arg in args:
+            if isinstance(arg, torch.Tensor):
+                input_tensors.append(
+                    {
+                        'ptr': arg.data_ptr(),
+                        'grad_fn': str(arg.grad_fn),
+                        'grad_exists': (arg.grad is not None),
+                        'shape': str(arg.shape)
+                    }
+                )
+            elif isinstance(arg, list) or isinstance(arg, tuple):
+                for item in arg:
+                    if isinstance(item, torch.Tensor):
+                        input_tensors.append(
+                            {
+                                'ptr': item.data_ptr(),
+                                'grad_fn': str(item.grad_fn),
+                                'grad_exists': (item.grad is not None),
+                                'shape': str(item.shape)
+                            }
+                        )
+                        if isinstance(item, list) or isinstance(item, tuple):
+                            for item2 in item:
+                                if isinstance(item2, torch.Tensor):
+                                    input_tensors.append(
+                                        {
+                                            'ptr': item2.data_ptr(),
+                                            'grad_fn': str(item2.grad_fn),
+                                            'grad_exists': (item2.grad is not None),
+                                            'shape': str(item2.shape)
+                                        }
+                                    )
+        for input_id, _ in enumerate(input_tensors):
+            input_ptr = input_tensors[input_id]['ptr']
+            if input_ptr in op_to_out_tensor_map:
+                input_callid_info = op_to_out_tensor_map[input_ptr]
+                if input_callid_info not in input_callid_list:
+                    input_callid_list.append(input_callid_info)
+
+    def capture_outputs(call_id, result):
+        output_tensors = []
+        if isinstance(result, torch.Tensor):
+            output_tensors.append(
+                {
+                    'ptr': result.data_ptr(),
+                    'grad_fn': str(result.grad_fn),
+                    'grad_exists': (result.grad is not None),
+                    'shape': str(result.shape)
+                }
+            )
+        elif isinstance(result, list) or isinstance(result, tuple):
+            for item in result:
+                if isinstance(item, torch.Tensor):
+                    output_tensors.append(
+                        {
+                            'ptr': item.data_ptr(),
+                            'grad_fn': str(item.grad_fn),
+                            'grad_exists': (item.grad is not None),
+                            'shape': str(item.shape)
+                        }
+                    )
+        for out_port, _ in enumerate(output_tensors):
+            output_ptr = output_tensors[out_port]['ptr']
+            op_to_out_tensor_map[output_ptr] = f"{call_id}"
+
     def wrapper_func(*args, **kwargs):
         global wrappers_enabled
         global call_id
@@ -311,46 +361,9 @@ def add_wrapper(mod, fn_name):
 
         patch_list.append(call_id)
         input_callid_list = []
+
         if config.capture_input_ops:
-            input_tensors = []
-            for arg in args:
-                if isinstance(arg, torch.Tensor):
-                    input_tensors.append(
-                        {
-                            'ptr': arg.data_ptr(),
-                            'grad_fn': str(arg.grad_fn),
-                            'grad_exists': (arg.grad is not None),
-                            'shape': str(arg.shape)
-                        }
-                    )
-                elif isinstance(arg, list) or isinstance(arg, tuple):
-                    for item in arg:
-                        if isinstance(item, torch.Tensor):
-                            input_tensors.append(
-                                {
-                                    'ptr': item.data_ptr(),
-                                    'grad_fn': str(item.grad_fn),
-                                    'grad_exists': (item.grad is not None),
-                                    'shape': str(item.shape)
-                                }
-                            )
-                            if isinstance(item, list) or isinstance(item, tuple):
-                                for item2 in item:
-                                    if isinstance(item2, torch.Tensor):
-                                        input_tensors.append(
-                                            {
-                                                'ptr': item2.data_ptr(),
-                                                'grad_fn': str(item2.grad_fn),
-                                                'grad_exists': (item2.grad is not None),
-                                                'shape': str(item2.shape)
-                                            }
-                                        )
-            for input_id, _ in enumerate(input_tensors):
-                input_ptr = input_tensors[input_id]['ptr']
-                if input_ptr in op_to_out_tensor_map:
-                    input_callid_info = op_to_out_tensor_map[input_ptr]
-                    if input_callid_info not in input_callid_list:
-                        input_callid_list.append(input_callid_info)
+            capture_inputs(input_callid_list, *args)
 
         if wrappers_enabled:
             # Push trace marker
@@ -387,35 +400,13 @@ def add_wrapper(mod, fn_name):
             # Pop trace marker
             nvtx.range_pop()
 
-            if config.capture_input_ops:
-                output_tensors = []
-                if isinstance(result, torch.Tensor):
-                    output_tensors.append(
-                        {
-                            'ptr': result.data_ptr(),
-                            'grad_fn': str(result.grad_fn),
-                            'grad_exists': (result.grad is not None),
-                            'shape': str(result.shape)
-                        }
-                    )
-                elif isinstance(result, list) or isinstance(result, tuple):
-                    for item in result:
-                        if isinstance(item, torch.Tensor):
-                            output_tensors.append(
-                                {
-                                    'ptr': item.data_ptr(),
-                                    'grad_fn': str(item.grad_fn),
-                                    'grad_exists': (item.grad is not None),
-                                    'shape': str(item.shape)
-                                }
-                            )
-                for out_port, _ in enumerate(output_tensors):
-                    output_ptr = output_tensors[out_port]['ptr']
-                    op_to_out_tensor_map[output_ptr] = "{}".format(call_id)
-        # Store the callid -> op_name mapping
-        if config.func_stack_enabled:
-            call_id_to_op_map[call_id] = traceMarker_dict['funcStack']
-        call_id = call_id + 1
+        if config.capture_input_ops:
+            capture_outputs(call_id, result)
+            # Store the callid -> op_name mapping
+            if config.func_stack_enabled:
+                call_id_to_op_map[call_id] = traceMarker_dict['funcStack']
+                call_id = call_id + 1
+
         return result
 
     setattr(mod, fn_name, wrapper_func)
