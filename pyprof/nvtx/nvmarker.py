@@ -43,8 +43,7 @@ import json
 from .config import Config
 
 # Global state variables
-call_id = 0
-patch_list = []  ## Keep track of nested calls to wrapper
+call_id = 0  # input op tracking idenifier
 op_to_out_tensor_map = {}
 # Flag to indicate if wrapper_func() should inject nvtx or
 # just execute the wrapped function. This is used to stop
@@ -356,10 +355,8 @@ def add_wrapper(mod, fn_name):
         global wrappers_enabled
         global call_id
         global op_to_out_tensor_map
-        global patch_list
         global call_id_to_op_map
 
-        patch_list.append(call_id)
         input_callid_list = []
 
         if config.capture_input_ops:
@@ -369,8 +366,6 @@ def add_wrapper(mod, fn_name):
             # Push trace marker
             traceMarker_str = traceMarker(fn_name)
             nvtx.range_push(traceMarker_str)
-            traceMarker_str = traceMarker_str.replace("\'", "\"")
-            traceMarker_dict = json.loads(traceMarker_str)
 
             # Push module marker
             if s:
@@ -404,6 +399,8 @@ def add_wrapper(mod, fn_name):
             capture_outputs(call_id, result)
             # Store the callid -> op_name mapping
             if config.func_stack_enabled:
+                traceMarker_str = traceMarker_str.replace("\'", "\"")
+                traceMarker_dict = json.loads(traceMarker_str)
                 call_id_to_op_map[call_id] = traceMarker_dict['funcStack']
                 call_id = call_id + 1
 
@@ -416,6 +413,7 @@ def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     #For this function args is a tuple and kwargs is a dict
     global call_id_to_op_map
     global op_to_out_tensor_map
+    config = Config.getInstance()
 
     def tensor(arg, name=""):
         cid = op_to_out_tensor_map.get(arg.data_ptr(), -1)
@@ -499,8 +497,9 @@ def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     cadena = {}
     cadena['mod'] = mod.__name__
     cadena['op'] = op
-    cadena['callid'] = idx
-    cadena['input_callids'] = inputid_list
+    if config.capture_input_ops:
+        cadena['callid'] = idx
+        cadena['input_callids'] = inputid_list
     cadena['args'] = []
 
     foo(args, "")
