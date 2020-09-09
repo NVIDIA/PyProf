@@ -41,17 +41,12 @@ import traceback
 import math
 import json
 from .config import Config
+from .dlprof import DLProf
 
-# Global state variables
-call_id = 0  # input op tracking idenifier
-op_to_out_tensor_map = {}
-# Flag to indicate if wrapper_func() should inject nvtx or
-# just execute the wrapped function. This is used to stop
-# recursion where turning the input args into a string ends up
-# executing another wrapped function
+# Singleton object tracking dlprof specific information
+dlprof = DLProf()
+# flag to control wrapping ops in nvtx markers
 wrappers_enabled = True
-# Map from call_id to op name
-call_id_to_op_map = {}
 
 
 def isfunc(mod, f):
@@ -80,82 +75,11 @@ def isfunc(mod, f):
     return ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr)
 
 
-# Nested dicts of this run's frame names to help uniquify them
-#
-# func_map[(partial_func_stack,frame_name)][filename+lineno] = frame_name_to_use
-#
-func_map = {}
-
-
 # Returns a dict string with a tracemarker and function stack in it
 #
 def traceMarker(op_name):
-    global func_map
 
-    # Return True if the name in the hierarchy should be skipped
-    #
-    def should_skip_frame_name(name, prev_name):
-        # __call__:
-        #    Much of Torch library is implemented in this way. Ignore these extra layers
-        # wrapper_func and always_benchmark_warpper:
-        #    Are functions in this file. If there are nested monkeypatched functions
-        #    we don't want it to show up
-        # <*>:
-        #    Things like <module>, <genexpr>, <lamba> which don't add any information
-        #    and break html
-        # name==prev_name:
-        #    Remove back-to-back duplicates of the same function name.
-        #    This is common when python calls the inheritence stack
-        #    For example:
-        #      This: ModelAndLoss::forward/ResNet::forward/Sequential::forward/Bottleneck::forward/BatchNorm2d::forward
-        #      Comes to this function as: forward/forward/forward/forward/forward
-        #      Leaves this function as: forward
-        #
-        for prefix in ["__call__", "wrapper_func", "always_benchmark_wrapper"]:
-            if name.startswith(prefix):
-                return True
-        if name.startswith("<") and name.endswith(">"):
-            return True
-        if name == prev_name:
-            return True
-        return False
-
-    # Given a function stack, clean it up to remove unwanted fields as
-    # well as removing any back-to-back duplicates
-    #
-    def cleanup_func_stack(func_stack, op_name):
-
-        ret = ""
-        prev_fn_name = ""
-        suffix = ""
-
-        x = func_stack.split("/")
-        for fn_name in x:
-
-            # This is used to detect when the same torch op was called
-            # multiple times from the same parent function. Capture the
-            # count as a 'suffix' and put it on the end of the op name
-            #
-            # For example, if we end up with these:
-            #   a/b/c/wrapper_func
-            #   a/b/c/wrapper_func(2)
-            # Both would end up as a/b/c after the wrapper function is ignored
-            # However, we want to keep the information that the resulting torch op
-            # called by wrapper_func was called 2 different times from the same function 'c'
-            #
-            # This code changes "wrapper_func(2)" to "(2)" so that it doesn't get filtered
-            # out by should_skip_frame_name()
-            #
-            if fn_name.startswith("wrapper_func("):
-                suffix = fn_name.replace("wrapper_func", "")
-            if fn_name.startswith("always_benchmark_wrapper("):
-                suffix = fn_name.replace("always_benchmark_wrapper", "")
-
-            if not should_skip_frame_name(fn_name, prev_fn_name):
-                ret += "/" + fn_name
-                prev_fn_name = fn_name
-        ret += "/" + op_name + suffix
-        return ret
+    config = Config()
 
     # Return a trace marker string and func_stack string
     #
@@ -167,14 +91,14 @@ def traceMarker(op_name):
         # Previous frame name and line. This is the file and line
         # that CALLED the frame we are in
         #
-        prev_fnl = ""
+        prev_fn = ""
 
         # Starting at index of 2 to ignore this function and its parent (traceMarker).
         # Intentionally leaving in wrapper_func and other functions in this file as they
         # may be needed to uniquify the node name
         #
-        for i in range(len(stack) - 2):
-            frame = stack[i]
+        for idx in range(len(stack) - 2):
+            frame = stack[idx]
 
             # Build traceMarker
             #
@@ -183,77 +107,30 @@ def traceMarker(op_name):
             # Also skip repeated back to back cases of the same file/line (recursive calls)
             #
             fnl = "{}:{}".format(frame.filename, frame.lineno)
-            if (not frame.filename.endswith("nvmarker.py") and fnl != prev_fnl):
+            if (not frame.filename.endswith("nvmarker.py") and fnl != prev_fn):
                 cadena.append(fnl)
 
             # Early exit if we aren't doing any funcStack code
             #
-            if not Config.getInstance().func_stack_enabled:
+            if not config.func_stack_enabled:
                 continue
-
-            # Build funcStack
-            #
-            fn_name = frame.name
-
-            # Capture class name
-            #
-            # Iterate through the stack frames (like a linked list) until we get
-            # to the detailed frame we want. This is much faster and less
-            # expensive than extracting the entire frame stack every time
-            #
-            # ins stack is backwards from traceback, so depth is inverse
-            # of current traceback depth
-            #
-            depth = len(stack) - i
-            ins_frame = ins.currentframe()
-            for _ in range(1, depth):
-                ins_frame = ins_frame.f_back
-
-            # Grab the class name if it exists
-            #
-            if 'self' in ins_frame.f_locals:
-                fn_name = ins_frame.f_locals['self'].__class__.__name__ + "::" + fn_name
-
-            key = (func_stack, frame.name, "")
-            if (fn_name in ["wrapper_func", "always_benchmark_wrapper"]):
-                key = (func_stack, frame.name, op_name)
-
-            if key not in func_map.keys():
-                func_map[key] = {}
-
-            # If we have been to this stack depth with all the same
-            # information, use the stored name
-            #
-            if prev_fnl in func_map[key].keys():
-                fn_name = func_map[key][prev_fnl]
             else:
-                # If we have been do this stack depth and have called
-                # this function at least once but didn't hit in the dict
-                # above, then this is a repeat call. Postpend a count
-                # to the fn_name to uniquify it
-                #
-                if len(func_map[key]) > 0:
-                    fn_name = fn_name + "(" + str(1 + len(func_map[key])) + ")"
-
-                # Store this new unique stack information with the
-                # determined fn_name
-                #
-                func_map[key][prev_fnl] = fn_name
-            prev_fnl = fnl
+                fn_name = dlprof.build_function_stack(idx, frame.name, prev_fn, op_name, stack)
+            prev_fn = fnl
 
             # Append this frame's info into the function stack
             #
             func_stack = func_stack + "/" + fn_name
 
-        if Config.getInstance().func_stack_enabled:
-            func_stack = cleanup_func_stack(func_stack, op_name)
+        if config.func_stack_enabled:
+            func_stack = dlprof.cleanup_func_stack(func_stack, op_name)
 
         return cadena, func_stack
 
     d = {}
     tm, fs = get_trace_info(op_name)
     d['traceMarker'] = tm
-    if Config.getInstance().func_stack_enabled:
+    if config.func_stack_enabled:
         d['funcStack'] = fs
     return str(d)
 
@@ -272,7 +149,7 @@ def modMarker(mod, fn_name, args):
 
 def add_wrapper(mod, fn_name):
 
-    config = Config.getInstance()
+    config = Config()
 
     # Get a pointer to the original function
     func = getattr(mod, fn_name)
@@ -284,83 +161,14 @@ def add_wrapper(mod, fn_name):
                                        ) and (type(mod) is not torch.jit.TopLevelTracedModule)
     # yapf: enable
 
-    def capture_inputs(input_callid_list, *args):
-        input_tensors = []
-        for arg in args:
-            if isinstance(arg, torch.Tensor):
-                input_tensors.append(
-                    {
-                        'ptr': arg.data_ptr(),
-                        'grad_fn': str(arg.grad_fn),
-                        'grad_exists': (arg.grad is not None),
-                        'shape': str(arg.shape)
-                    }
-                )
-            elif isinstance(arg, list) or isinstance(arg, tuple):
-                for item in arg:
-                    if isinstance(item, torch.Tensor):
-                        input_tensors.append(
-                            {
-                                'ptr': item.data_ptr(),
-                                'grad_fn': str(item.grad_fn),
-                                'grad_exists': (item.grad is not None),
-                                'shape': str(item.shape)
-                            }
-                        )
-                        if isinstance(item, list) or isinstance(item, tuple):
-                            for item2 in item:
-                                if isinstance(item2, torch.Tensor):
-                                    input_tensors.append(
-                                        {
-                                            'ptr': item2.data_ptr(),
-                                            'grad_fn': str(item2.grad_fn),
-                                            'grad_exists': (item2.grad is not None),
-                                            'shape': str(item2.shape)
-                                        }
-                                    )
-        for input_id, _ in enumerate(input_tensors):
-            input_ptr = input_tensors[input_id]['ptr']
-            if input_ptr in op_to_out_tensor_map:
-                input_callid_info = op_to_out_tensor_map[input_ptr]
-                if input_callid_info not in input_callid_list:
-                    input_callid_list.append(input_callid_info)
-
-    def capture_outputs(call_id, result):
-        output_tensors = []
-        if isinstance(result, torch.Tensor):
-            output_tensors.append(
-                {
-                    'ptr': result.data_ptr(),
-                    'grad_fn': str(result.grad_fn),
-                    'grad_exists': (result.grad is not None),
-                    'shape': str(result.shape)
-                }
-            )
-        elif isinstance(result, list) or isinstance(result, tuple):
-            for item in result:
-                if isinstance(item, torch.Tensor):
-                    output_tensors.append(
-                        {
-                            'ptr': item.data_ptr(),
-                            'grad_fn': str(item.grad_fn),
-                            'grad_exists': (item.grad is not None),
-                            'shape': str(item.shape)
-                        }
-                    )
-        for out_port, _ in enumerate(output_tensors):
-            output_ptr = output_tensors[out_port]['ptr']
-            op_to_out_tensor_map[output_ptr] = f"{call_id}"
-
     def wrapper_func(*args, **kwargs):
+
         global wrappers_enabled
-        global call_id
-        global op_to_out_tensor_map
-        global call_id_to_op_map
 
         input_callid_list = []
 
         if config.capture_input_ops:
-            capture_inputs(input_callid_list, *args)
+            dlprof.capture_inputs(input_callid_list, *args)
 
         if wrappers_enabled:
             # Push trace marker
@@ -377,7 +185,10 @@ def add_wrapper(mod, fn_name):
             # Disable wrappers while getting the argMarker in case it
             # ends up executing another wrapped function
             wrappers_enabled = False
-            cadena = argMarker(mod, fn_name, args, kwargs, call_id, input_callid_list)
+            if config.capture_input_ops:
+                cadena = argMarker(mod, fn_name, args, kwargs, dlprof.call_id, input_callid_list)
+            else:
+                cadena = argMarker(mod, fn_name, args, kwargs)
             nvtx.range_push(cadena)
             wrappers_enabled = True
 
@@ -396,13 +207,13 @@ def add_wrapper(mod, fn_name):
             nvtx.range_pop()
 
         if config.capture_input_ops:
-            capture_outputs(call_id, result)
+            dlprof.capture_outputs(dlprof.call_id, result)
             # Store the callid -> op_name mapping
             if config.func_stack_enabled:
                 traceMarker_str = traceMarker_str.replace("\'", "\"")
                 traceMarker_dict = json.loads(traceMarker_str)
-                call_id_to_op_map[call_id] = traceMarker_dict['funcStack']
-                call_id = call_id + 1
+                dlprof.call_id_to_op_map[dlprof.call_id] = traceMarker_dict['funcStack']
+                dlprof.call_id = dlprof.call_id + 1
 
         return result
 
@@ -411,13 +222,12 @@ def add_wrapper(mod, fn_name):
 
 def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     #For this function args is a tuple and kwargs is a dict
-    global call_id_to_op_map
-    global op_to_out_tensor_map
-    config = Config.getInstance()
+    config = Config()
 
     def tensor(arg, name=""):
-        cid = op_to_out_tensor_map.get(arg.data_ptr(), -1)
-        name = call_id_to_op_map.get(int(cid), "")
+        if config.capture_input_ops:
+            cid = dlprof.op_to_out_tensor_map.get(arg.data_ptr(), -1)
+            name = dlprof.call_id_to_op_map.get(int(cid), "")
         a = {}
         a['name'] = name
         a['type'] = "tensor"
@@ -721,7 +531,7 @@ def patch_model_configs():
     patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
 
 
-def init(**kwargs):
+def init(*args, **kwargs):
     """
     Initialize pyprof and monkey-patch Torch functions
 
@@ -729,7 +539,7 @@ def init(**kwargs):
         enable_function_stack (bool): When true, function stack information will be added to NVTX markers
     """
 
-    config = Config(**kwargs)
+    Config(*args, **kwargs)
 
     print("Initializing NVTX monkey patches")
 
