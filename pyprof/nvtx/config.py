@@ -16,19 +16,14 @@
 # limitations under the License.
 
 
-class Config:
-    __instance = None
+class Config(object):
+    _instance = None
 
-    @staticmethod
-    def getInstance():
-        if Config.__instance == None:
-            Config()
-        return Config.__instance
-
-    def __init__(self, **kwargs):
-        if Config.__instance != None:
-            raise Exception("This is a singleton")
-        else:
-            Config.__instance = self
-            self.func_stack_enabled = kwargs.get("enable_function_stack", False)
-            self.capture_input_ops = kwargs.get("capture_input_ops", False)
+    # Overloading the __new__ method enables singleton behavior
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Config, cls).__new__(cls)
+            cls.func_stack_enabled = kwargs.get("enable_function_stack",
+                                                False) or kwargs.get("capture_input_ops", False)
+            cls.capture_input_ops = kwargs.get("capture_input_ops", False)
+        return cls._instance
