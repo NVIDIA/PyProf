@@ -115,7 +115,8 @@ def traceMarker(op_name):
             if not config.func_stack_enabled:
                 continue
             else:
-                fn_name = dlprof.build_function_stack(idx, frame.name, prev_fn, op_name, stack)
+                ins_frame = ins.currentframe()
+                fn_name = dlprof.build_function_stack(idx, func_stack, frame.name, prev_fn, op_name, stack, ins_frame)
             prev_fn = fnl
 
             # Append this frame's info into the function stack

@@ -36,8 +36,8 @@ class DLProf(object):
         return cls._instance
 
     # Return True if the name in the hierarchy should be skipped
-    @staticmethod
-    def should_skip_frame_name(name, prev_name):
+    @classmethod
+    def should_skip_frame_name(cls, name, prev_name):
         # __call__:
         #    Much of Torch library is implemented in this way. Ignore these extra layers
         # wrapper_func and always_benchmark_warpper:
@@ -65,8 +65,8 @@ class DLProf(object):
 
     # Given a function stack, clean it up to remove unwanted fields as
     # well as removing any back-to-back duplicates
-    @staticmethod
-    def cleanup_func_stack(func_stack, op_name):
+    @classmethod
+    def cleanup_func_stack(cls, func_stack, op_name):
 
         ret = ""
         prev_fn_name = ""
@@ -101,11 +101,10 @@ class DLProf(object):
         return ret
 
     @classmethod
-    def build_function_stack(cls, index, frame_name, prev_fn, op_name, stack):
+    def build_function_stack(cls, index, func_stack, frame_name, prev_fn, op_name, stack, ins_frame):
 
         # Build funcStack
         fn_name = frame_name
-        func_stack = ""
         # Capture class name
         #
         # Iterate through the stack frames (like a linked list) until we get
@@ -116,7 +115,6 @@ class DLProf(object):
         # of current traceback depth
         #
         depth = len(stack) - index
-        ins_frame = ins.currentframe()
         for _ in range(1, depth):
             ins_frame = ins_frame.f_back
 
@@ -124,7 +122,6 @@ class DLProf(object):
         #
         if 'self' in ins_frame.f_locals:
             fn_name = ins_frame.f_locals['self'].__class__.__name__ + "::" + fn_name
-
         key = (func_stack, frame_name, "")
         if (fn_name in ["wrapper_func", "always_benchmark_wrapper"]):
             key = (func_stack, frame_name, op_name)
