@@ -22,8 +22,11 @@ import unittest
 
 import pyprof
 from pyprof.nvtx.config import Config
+from pyprof.nvtx.dlprof import DLProf
 
 config = Config(enable_function_stack=True)
+dlprof = DLProf()
+
 
 class TestPyProfFuncStack(unittest.TestCase):
 
@@ -47,7 +50,7 @@ class TestPyProfFuncStack(unittest.TestCase):
             #
             for i, n in enumerate(fn_split):
                 if (n == "TestPyProfFuncStack::run"):
-                    split = i+1
+                    split = i + 1
 
             fn_split = fn_split[split:]
             joined = separator.join(fn_split)
@@ -55,17 +58,19 @@ class TestPyProfFuncStack(unittest.TestCase):
 
         tracemarker_dict = eval(actual_tracemarker)
         actual_func_stack = remove_test_class_hierarchy(tracemarker_dict["funcStack"])
-        self.assertEqual(expected_str,actual_func_stack)
-
+        self.assertEqual(expected_str, actual_func_stack, f"Expected: {expected_str}\nActual: {actual_func_stack}")
 
     # Basic function hierarchy test
     # Function stack is func1->func2->func3->verify
     # Local function 'verify' gets recognized as a member of TestPyProfFuncStack because it uses 'self'
     #
     def test_basic(self):
+
         def verify():
             tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
-            self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_basic/func1/func2/func3/TestPyProfFuncStack::verify/opname")
+            self.compare_funcstack(
+                tracemarker, "TestPyProfFuncStack::test_basic/func1/func2/func3/TestPyProfFuncStack::verify/opname"
+            )
 
         def func3():
             verify()
@@ -84,9 +89,13 @@ class TestPyProfFuncStack(unittest.TestCase):
     # Local function 'verify' gets recognized as a member of TestPyProfFuncStack because it uses 'self'
     #
     def test_ignore_wrapper_func(self):
+
         def verify():
             tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
-            self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_ignore_wrapper_func/func1/func2/func3/TestPyProfFuncStack::verify/opname")
+            self.compare_funcstack(
+                tracemarker,
+                "TestPyProfFuncStack::test_ignore_wrapper_func/func1/func2/func3/TestPyProfFuncStack::verify/opname"
+            )
 
         def wrapper_func():
             verify()
@@ -105,15 +114,18 @@ class TestPyProfFuncStack(unittest.TestCase):
 
         func1()
 
-
     # Test that lambdas are ignored in hierarchy
     # Function stack is func1->func2->lambda->func3->verify
-    # Local function 'verify' gets recognized as a member of TestPyProfFuncStack because it uses 'self'    
+    # Local function 'verify' gets recognized as a member of TestPyProfFuncStack because it uses 'self'
     #
     def test_ignore_lambda(self):
+
         def verify():
             tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
-            self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_ignore_lambda/func1/func2/func3/TestPyProfFuncStack::verify/opname")
+            self.compare_funcstack(
+                tracemarker,
+                "TestPyProfFuncStack::test_ignore_lambda/func1/func2/func3/TestPyProfFuncStack::verify/opname"
+            )
 
         def func3():
             verify()
@@ -130,41 +142,47 @@ class TestPyProfFuncStack(unittest.TestCase):
     # Test that duplicates are ignored in hierarchy
     #
     # Function stack is func1->func1->func1->func1->func2->verify
-    # Local function 'verify' gets recognized as a member of TestPyProfFuncStack because it uses 'self'    
+    # Local function 'verify' gets recognized as a member of TestPyProfFuncStack because it uses 'self'
     #
     def test_ignore_duplicates(self):
-           
+
         def verify():
             tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
-            self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_ignore_duplicates/func1/func2/TestPyProfFuncStack::verify/opname")
+            self.compare_funcstack(
+                tracemarker,
+                "TestPyProfFuncStack::test_ignore_duplicates/func1/func2/TestPyProfFuncStack::verify/opname"
+            )
 
         def func2():
             verify()
 
         def func1(count):
             if (count > 0):
-                func1(count-1)
+                func1(count - 1)
             else:
                 func2()
 
         func1(3)
 
-
-    # Function stack is func1->func2->wrapper_func. It is called 4 times. 
+    # Function stack is func1->func2->wrapper_func. It is called 4 times.
     #
     # Only the 4th time is any checking done
     #
     # On that 4th call, it will be the 2nd time executing func2, from func1, and
-    # it will be the 2nd time executing wrapper_func from that 2nd call of func2. 
-    # 
+    # it will be the 2nd time executing wrapper_func from that 2nd call of func2.
+    #
     # Even though wrapper_func is omitted from the func stack, its call count should
     # be passed on to the opname.
     #
     def test_uniquified_nodes(self):
+
         def verify(check):
             tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
             if (check):
-                self.compare_funcstack(tracemarker,"TestPyProfFuncStack::test_uniquified_nodes/func1/func2(2)/TestPyProfFuncStack::verify/opname(2)")
+                self.compare_funcstack(
+                    tracemarker,
+                    "TestPyProfFuncStack::test_uniquified_nodes/func1/func2(2)/TestPyProfFuncStack::verify/opname(2)"
+                )
 
         def wrapper_func(check):
             verify(check)
@@ -194,6 +212,7 @@ def run_tests(test_name):
         exit(0)
     else:
         exit(1)
-        
+
+
 if __name__ == '__main__':
     run_tests("test_basic")
