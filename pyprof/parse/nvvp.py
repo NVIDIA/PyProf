@@ -121,9 +121,13 @@ class NVVP(object):
         """
 		Get GPU kernel info
 		"""
-        cmd = "select name,correlationId,start,end,deviceId,streamId,gridX,gridY,gridZ,blockX,blockY,blockZ from {}".format(
-            self.kernelT
-        )
+        cmd = ("SELECT "
+              "name AS nameId, "
+              "strings.value as name, "
+              "correlationId,start,end,deviceId,streamId,"
+              "gridX,gridY,gridZ,blockX,blockY,blockZ"
+              " FROM {} "
+              "JOIN {} as strings ON (nameId = strings._id_)").format(self.kernelT, self.stringT)
         result = self.db.select(cmd)
         return result
 

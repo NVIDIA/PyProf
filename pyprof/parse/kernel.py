@@ -91,7 +91,7 @@ class Kernel(object):
         self.op = []
 
     def setKernelInfo(self, info):
-        self.kNameId = info['name']
+        self.kNameId = info['nameId']
         self.corrId = int(info['correlationId'])
         start = int(info['start'])
         end = int(info['end'])
@@ -105,6 +105,7 @@ class Kernel(object):
         self.grid = (info['gridX'], info['gridY'], info['gridZ'])
         self.block = (info['blockX'], info['blockY'], info['blockZ'])
         self.timeOffset = Kernel.profStart
+        self.setKernelName(info['name'])
 
     def setKernelName(self, name):
         cadena = demangle(name)
