@@ -18,17 +18,16 @@
 from .base import OperatorLayerBase
 from .tensor import Tensor
 
+
 class Activation(OperatorLayerBase):
     """
 	This class handles the various activation functions.
 	"""
 
     ops = [
-        "celu", "elu", "elu_", "hardshrink", "hardtanh", "hardtanh_",
-        "leaky_relu", "leaky_relu_", "logsigmoid", "prelu", "relu",
-        "relu_", "relu6", "rrelu", "rrelu_", "selu", "sigmoid",
-        "softplus", "softshrink", "softsign", "tanh", "tanhshrink",
-        "threshold", "threshold_"
+        "celu", "elu", "elu_", "hardshrink", "hardtanh", "hardtanh_", "leaky_relu", "leaky_relu_", "logsigmoid",
+        "prelu", "relu", "relu_", "relu6", "rrelu", "rrelu_", "selu", "sigmoid", "softplus", "softshrink", "softsign",
+        "tanh", "tanhshrink", "threshold", "threshold_"
     ]
 
     def __init__(self, d):
