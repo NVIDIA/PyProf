@@ -80,10 +80,6 @@ def main():
         #Set kernel info
         k.setKernelInfo(info)
 
-        #Get, set kernel name
-        name = nvvp.getString(k.kNameId)
-        k.setKernelName(name)
-
         #Get runtime info
         info = nvvp.getCPUInfo(k.corrId)
         k.setRunTimeInfo(info)

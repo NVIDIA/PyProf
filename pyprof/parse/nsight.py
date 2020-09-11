@@ -52,15 +52,6 @@ class Nsight(object):
         assert (profStart < sys.maxsize)
         return profStart
 
-    def getString(self, id_):
-        """
-		Get the string associated with an id.
-		"""
-        cmd = "select value from {} where id = {}".format(self.stringT, id_)
-        result = self.db.select(cmd)
-        assert (len(result) == 1)
-        return result[0]['value']
-
     def createMarkerTable(self):
         """
 		Create a temporary table and index it to speed up repeated SQL quesries.
@@ -99,9 +90,13 @@ class Nsight(object):
         """
 		Get GPU kernel info
 		"""
-        cmd = "select demangledName as name,correlationId,start,end,deviceId,streamId,gridX,gridY,gridZ,blockX,blockY,blockZ from {}".format(
-            self.kernelT
-        )
+        cmd = ("SELECT "
+              "demangledName AS nameId, "
+              "strings.value as name, "
+              "correlationId,start,end,deviceId,streamId,"
+              "gridX,gridY,gridZ,blockX,blockY,blockZ"
+              " FROM {} "
+              "JOIN {} as strings ON (nameId = strings.Id)").format(self.kernelT, self.stringT)
         result = self.db.select(cmd)
         return result
 
