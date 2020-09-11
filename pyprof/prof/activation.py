@@ -15,10 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-from .utility import Utility
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
 
 class Activation(OperatorLayerBase):
     """
@@ -26,9 +24,11 @@ class Activation(OperatorLayerBase):
 	"""
 
     ops = [
-        "celu", "elu", "elu_", "hardshrink", "hardtanh", "hardtanh_", "leaky_relu", "leaky_relu_", "logsigmoid",
-        "prelu", "relu", "relu_", "relu6", "rrelu", "rrelu_", "selu", "sigmoid", "softplus", "softshrink", "softsign",
-        "tanh", "tanhshrink", "threshold", "threshold_"
+        "celu", "elu", "elu_", "hardshrink", "hardtanh", "hardtanh_",
+        "leaky_relu", "leaky_relu_", "logsigmoid", "prelu", "relu",
+        "relu_", "relu6", "rrelu", "rrelu_", "selu", "sigmoid",
+        "softplus", "softshrink", "softsign", "tanh", "tanhshrink",
+        "threshold", "threshold_"
     ]
 
     def __init__(self, d):
@@ -37,10 +37,8 @@ class Activation(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (mod in ["torch.nn.functional", "torch", "Tensor"])
 
@@ -51,37 +49,28 @@ class Activation(OperatorLayerBase):
         arg = args[0]
         assert (arg['type'] == "tensor")
 
-        self.i = arg
+        self.inp = Tensor(arg['shape'], arg['dtype'])
         self.dir = d.dir
 
     def params(self):
-        p = OrderedDict([('T', self.i['shape']), ('type', self.i['dtype'])])
-        return p
+        return str(self.inp)
 
     def flops(self):
-        direction = self.dir
-        tensor = self.i['shape']
-        t = self.i['dtype']
-
-        # TODO: revise
-        elems = Utility.numElems(tensor)
-        return elems
+        # TODO: revise based on op
+        return self.inp.size
 
     def bytes(self):
+        # TODO: revise based on op
         direction = self.dir
-        tensor = self.i['shape']
-        t = self.i['dtype']
-
-        elems = Utility.numElems(tensor)
-        elems = elems * (2 if direction == "fprop" else 3)
-
-        return elems * Utility.typeToBytes(t)
+        b = self.inp.bytes
+        b *= 2 if direction == "fprop" else 3
+        return b
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod

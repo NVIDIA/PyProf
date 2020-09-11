@@ -19,14 +19,14 @@ from .dtype import Dtype
 
 class Tensor(object):
     def __init__(self, shape, dtype):
-        assert type(shape) == tuple
+        assert type(shape) in [tuple, list]
         assert dtype in Dtype.types()
-        self._shape = shape
+        self._shape = list(shape)
         self._dtype = dtype
 
     def __str__(self):
         t = Dtype(self.dtype)
-        return str(list(self.shape)).replace(" ", "") + str(t)
+        return str(self.shape).replace(" ", "") + str(t)
 
     @property
     def ndim(self):
