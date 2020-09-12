@@ -63,21 +63,6 @@ class Nsight(object):
         self.db.execute('CREATE INDEX end_index ON marker (end)')
         #self.db.execute('CREATE INDEX id_index ON marker (id)')
 
-    def getCPUInfo(self, info):
-        """
-		Given database results, return CPU start, end, pid, tid, and objId
-		"""
-
-        start = info['rStart']
-        end = info['rEnd']
-        # globalId = f(pid, tid). Call it objId (for legacy).
-        objId = info['globalTid']
-        pid = info['pid']
-        tid = info['tid']
-
-        assert (end > start)
-        return [start, end, pid, tid, objId]
-
     def getKernelInfo(self):
         """
 		Get GPU kernel info
@@ -87,7 +72,7 @@ class Nsight(object):
               "strings.value as name, "
               "runtime.start as rStart, "
               "runtime.end as rEnd, "
-              "runtime.globalTid as globalTid, "
+              "runtime.globalTid as objId, "
               "runtime.globalTid / 0x1000000 % 0x1000000 AS pid, "
               "runtime.globalTid % 0x1000000 AS tid, "
               "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
