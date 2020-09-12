@@ -15,16 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-from .utility import Utility
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
 
 class Convert(OperatorLayerBase):
     """
 	Class to handle convert operations.
 	"""
-    ops = ["byte", "char", "double", "float", "half", "int", "long", "short", "to"]
+    ops = ["byte", "char", "double", "float", "half", "int", "long",
+           "short", "to"]
 
     def __init__(self, d):
         marker = eval(d.argMarker[0])
@@ -32,49 +31,39 @@ class Convert(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (mod == "Tensor")
         assert (op in Convert.ops)
         assert (len(args) == 1)
 
-        #The argument could be a tensor or scalar
         t = args[0]
         if t['type'] == "tensor":
-            shape = t['shape']
-            stype = t['dtype']
-        else:
-            shape = (1, )
-            stype = t['type']
-        if self.op_ == "to":
-            op = stype
+            self.inp = Tensor(t['shape'], t['dtype'])
+        else: # scalar
+            self.inp = Tensor([], t['type'])
 
-        self.shape = shape
-        self.stype = stype
-        self.dtype = op
+        if op == "to":
+            # make the output the same as input
+            self.out = self.inp
+        else:
+            self.out = Tensor(self.inp.shape, op)
 
     def params(self):
-        p = OrderedDict([('T', self.shape), ('stype', self.stype), ('dtype', self.dtype)])
-        return p
+        return str(self.inp)
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
-
-    def elems(self):
-        return Utility.numElems(self.shape)
 
     def flops(self):
         return 0
 
     def bytes(self):
-        b = self.elems() * (Utility.typeToBytes(self.stype) + Utility.typeToBytes(self.dtype))
-        return b
+        return self.inp.bytes + self.out.bytes
