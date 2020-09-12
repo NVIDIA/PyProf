@@ -18,12 +18,12 @@
 from .base import OperatorLayerBase
 from .tensor import Tensor
 
+
 class Convert(OperatorLayerBase):
     """
 	Class to handle convert operations.
 	"""
-    ops = ["byte", "char", "double", "float", "half", "int", "long",
-           "short", "to"]
+    ops = ["byte", "char", "double", "float", "half", "int", "long", "short", "to"]
 
     def __init__(self, d):
         marker = eval(d.argMarker[0])
@@ -41,7 +41,7 @@ class Convert(OperatorLayerBase):
         t = args[0]
         if t['type'] == "tensor":
             self.input = Tensor(t['shape'], t['dtype'])
-        else: # scalar
+        else:  # scalar
             self.input = Tensor([], t['type'])
 
         if op == "to":
@@ -54,10 +54,10 @@ class Convert(OperatorLayerBase):
         return str(self.input)
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
