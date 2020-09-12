@@ -31,8 +31,13 @@ class Convert(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
+<<<<<<< HEAD
         self.mod_ = mod
         self.op_ = op
+=======
+        self._mod = mod
+        self._op = op
+>>>>>>> Using tensor methods in convert.
 
         assert (mod == "Tensor")
         assert (op in Convert.ops)
@@ -40,6 +45,7 @@ class Convert(OperatorLayerBase):
 
         t = args[0]
         if t['type'] == "tensor":
+<<<<<<< HEAD
             self.input = Tensor(t['shape'], t['dtype'])
         else:  # scalar
             self.input = Tensor([], t['type'])
@@ -52,12 +58,26 @@ class Convert(OperatorLayerBase):
 
     def params(self):
         return str(self.input)
+=======
+            self.inp = Tensor(t['shape'], t['dtype'])
+        else: # scalar
+            self.inp = Tensor([], t['type'])
+
+        if op == "to":
+            # make the output the same as input
+            self.out = self.inp
+        else:
+            self.out = Tensor(self.inp.shape, op)
+
+    def params(self):
+        return str(self.inp)
+>>>>>>> Using tensor methods in convert.
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
@@ -66,4 +86,8 @@ class Convert(OperatorLayerBase):
         return 0
 
     def bytes(self):
+<<<<<<< HEAD
         return self.input.bytes + self.output.bytes
+=======
+        return self.inp.bytes + self.out.bytes
+>>>>>>> Using tensor methods in convert.
