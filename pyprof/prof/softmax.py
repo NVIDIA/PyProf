@@ -15,10 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-from .utility import Utility
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
 
 class Softmax(OperatorLayerBase):
 
@@ -28,10 +26,8 @@ class Softmax(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (mod == "torch.nn.functional")
         assert (op == "softmax")
@@ -40,38 +36,37 @@ class Softmax(OperatorLayerBase):
         args = list(filter(lambda x: x['name'] == '', args))
 
         assert (len(args) <= 2)
-        self.shape = args[0]['shape']
-        self.type = args[0]['dtype']
+        arg = args[0]
+        self.inp = Tensor(arg['shape'], arg['dtype'])
         self.dir = d.dir
-
         return
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
 
     def params(self):
-        p = OrderedDict([('T', self.shape), ('type', self.type)])
-        return p
-
-    def elems(self):
-        return Utility.numElems(self.shape)
+        return str(self.inp)
 
     def flops(self):
-        # Note: exp, sum-reduce, divide
-        #flops = elems * 3
-        return 0
+        # An approximation
+        # http://ai.stanford.edu/~paskin/slam/javadoc/javaslam/util/Flops.html#exp()
+        # TODO: consider direction
+        e = self.inp.size
+        f = e * 20 # denominator, exp all elements and reduce
+        f += e * 20 # numerator, exp all elements and divide
+        return f
 
     def bytes(self):
-        b = self.elems() * Utility.typeToBytes(self.type)
-        b *= 3 if self.dir == "fprop" else 5  #verify
+        # TODO: verify
+        b = self.inp.bytes
+        b *= 3 if self.dir == "fprop" else 5
         return b
-
 
 class LogSoftmax(OperatorLayerBase):
 
@@ -81,10 +76,8 @@ class LogSoftmax(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (mod in ["torch", "torch.nn.functional"])
         assert (op == "log_softmax")
@@ -100,35 +93,33 @@ class LogSoftmax(OperatorLayerBase):
         else:
             i = list(filter(lambda x: x['name'] == "input", args))[0]
 
-        t = i['dtype']
-
-        self.shape = i['shape']
-        self.type = i['dtype']
+        self.inp = Tensor(i['shape'], i['dtype'])
         self.dir = d.dir
         return
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
 
     def params(self):
-        p = OrderedDict([('T', self.shape), ('type', self.type)])
-        return p
-
-    def elems(self):
-        return Utility.numElems(self.shape)
+        return str(self.inp)
 
     def flops(self):
-        # Note: exp, sum-reduce, divide, log
-        #flops = elems * 4
-        return 0
+        # An approximation
+        # http://ai.stanford.edu/~paskin/slam/javadoc/javaslam/util/Flops.html#exp()
+        # TODO: consider direction
+        e = self.inp.size
+        f = e * 20 # denominator, exp all elements and reduce
+        f += e # numerator, just a subtraction
+        return f
 
     def bytes(self):
-        b = self.elems() * Utility.typeToBytes(self.type)
-        b *= 3 if self.dir == "fprop" else 5  #verify
+        # TODO: verify
+        b = self.inp.bytes
+        b *= 3 if self.dir == "fprop" else 5
         return b
