@@ -81,7 +81,7 @@ def main():
         k.setKernelInfo(info)
 
         #Get runtime info
-        info = nvvp.getCPUInfo(k.corrId)
+        info = nvvp.getCPUInfo(info)
         k.setRunTimeInfo(info)
 
         #Get and set marker and seqid info

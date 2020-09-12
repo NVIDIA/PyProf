@@ -91,7 +91,7 @@ class Kernel(object):
         self.op = []
 
     def setKernelInfo(self, info):
-        self.kNameId = info['nameId']
+        self.kNameId = info['kNameId']
         self.corrId = int(info['correlationId'])
         start = int(info['start'])
         end = int(info['end'])

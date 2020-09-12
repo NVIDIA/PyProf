@@ -63,25 +63,17 @@ class Nsight(object):
         self.db.execute('CREATE INDEX end_index ON marker (end)')
         #self.db.execute('CREATE INDEX id_index ON marker (id)')
 
-    def getCPUInfo(self, corrId):
+    def getCPUInfo(self, info):
         """
-		Given the correlation id, get CPU start, end, thread id, process id.
-		The information can be in the runtime table or the driver table.
+		Given database results, return CPU start, end, pid, tid, and objId
 		"""
 
-        #First look in the runtime table
-        #cmd = "select start,end,processId,threadId from {} where correlationId={}".format(self.runtimeT, corrId);
-        cmd = "select start,end,globalTid from {} where correlationId={}".format(self.runtimeT, corrId)
-        result = self.db.select(cmd)
-        assert (len(result) == 1)
-
-        info = result[0]
-        start = info['start']
-        end = info['end']
+        start = info['rStart']
+        end = info['rEnd']
         # globalId = f(pid, tid). Call it objId (for legacy).
         objId = info['globalTid']
-        pid = -1
-        tid = objId & 0x00000000ffffff  # not sure, but appears to be.
+        pid = info['pid']
+        tid = info['tid']
 
         assert (end > start)
         return [start, end, pid, tid, objId]
@@ -91,12 +83,19 @@ class Nsight(object):
 		Get GPU kernel info
 		"""
         cmd = ("SELECT "
-              "demangledName AS nameId, "
+              "demangledName as kNameId, "
               "strings.value as name, "
-              "correlationId,start,end,deviceId,streamId,"
-              "gridX,gridY,gridZ,blockX,blockY,blockZ"
-              " FROM {} "
-              "JOIN {} as strings ON (nameId = strings.Id)").format(self.kernelT, self.stringT)
+              "runtime.start as rStart, "
+              "runtime.end as rEnd, "
+              "runtime.globalTid as globalTid, "
+              "runtime.globalTid / 0x1000000 % 0x1000000 AS pid, "
+              "runtime.globalTid % 0x1000000 AS tid, "
+              "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
+              "gridX,gridY,gridZ,blockX,blockY,blockZ "
+              "FROM {} AS kernels "
+              "JOIN {} AS strings ON (kNameId = strings.Id) "
+              "JOIN {} AS runtime ON (kernels.correlationId = runtime.correlationId) "
+              ).format(self.kernelT, self.stringT, self.runtimeT)
         result = self.db.select(cmd)
         return result
 

@@ -90,28 +90,14 @@ class NVVP(object):
         self.db.execute('CREATE INDEX end_index ON marker (endTime)')
         self.db.execute('CREATE INDEX id_index ON marker (id)')
 
-    def getCPUInfo(self, corrId):
+    def getCPUInfo(self, info):
         """
-		Given the correlation id, get CPU start, end, thread id, process id.
-		The information can be in the runtime table or the driver table.
+		Given database results, return CPU start, end, pid, tid, and objId
 		"""
-
-        #First look in the runtime table
-        cmd = "select start,end,processId,threadId from {} where correlationId={}".format(self.runtimeT, corrId)
-        result = self.db.select(cmd)
-        assert (len(result) <= 1)
-
-        if (len(result) == 0):
-            #Look in the driver table
-            cmd = "select start,end,processId,threadId from {} where correlationId={}".format(self.driverT, corrId)
-            result = self.db.select(cmd)
-
-        assert (len(result) == 1)
-        info = result[0]
-        start = info['start']
-        end = info['end']
-        pid = info['processId']
-        tid = info['threadId']
+        start = info['rStart']
+        end = info['rEnd']
+        pid = info['pid']
+        tid = info['tid']
         tid = tid & 0xffffffff  #convert to unsigned
         objId = self.encode_object_id(pid, tid)
         assert (end > start)
@@ -122,12 +108,18 @@ class NVVP(object):
 		Get GPU kernel info
 		"""
         cmd = ("SELECT "
-              "name AS nameId, "
+              "name AS kNameId, "
               "strings.value as name, "
-              "correlationId,start,end,deviceId,streamId,"
-              "gridX,gridY,gridZ,blockX,blockY,blockZ"
-              " FROM {} "
-              "JOIN {} as strings ON (nameId = strings._id_)").format(self.kernelT, self.stringT)
+              "runtime.start as rStart, "
+              "runtime.end as rEnd, "
+              "coalesce(runtime.processId, driver.processId) as pid, "
+              "coalesce(runtime.threadId, driver.threadId) as tid, "
+              "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
+              "gridX,gridY,gridZ,blockX,blockY,blockZ "
+              "FROM {} AS kernels "
+              "JOIN {} AS strings ON (KNameId = strings._id_) "
+              "LEFT JOIN {} AS runtime ON (kernels.correlationId = runtime.correlationId) "
+              "LEFT JOIN {} AS driver ON (driver.correlationId = runtime.correlationId) ").format(self.kernelT, self.stringT, self.runtimeT, self.driverT)
         result = self.db.select(cmd)
         return result
 
