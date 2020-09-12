@@ -106,6 +106,7 @@ class Kernel(object):
         self.block = (info['blockX'], info['blockY'], info['blockZ'])
         self.timeOffset = Kernel.profStart
         self.setKernelName(info['name'])
+        self.setRunTimeInfo(info)
 
     def setKernelName(self, name):
         cadena = demangle(name)
@@ -113,13 +114,21 @@ class Kernel(object):
         self.kShortName = getShortName(cadena)
 
     def setRunTimeInfo(self, info):
-        start, end, pid, tid, objId = info
-        self.rStartTime = start
-        self.rEndTime = end
-        self.rDuration = end - start
-        self.pid = pid
-        self.tid = tid
-        self.objId = objId
+        self.rStartTime = info['rStart']
+        self.rEndTime = info['rEnd']
+        self.rDuration = info['rEnd'] - info['rStart']
+        self.pid = info['pid']
+        self.tid = info['tid']
+
+        # Determine object ID
+        if 'objId' in info:
+            self.objId = info['objId']
+        else:
+		    # calculate it from the process ID (pid) and thread ID (tid)
+		    # object id = pid (little endian 4 bytes) + tid (little endian 8 bytes)
+            objId = struct.pack('<i', self.pid) + struct.pack('<q', self.tid)
+            objId = binascii.hexlify(objId).decode('ascii').upper()
+            self.objId = objId
 
     def setMarkerInfo(self, info):
         self.layerMarkers, self.traceMarkers, self.reprMarkers, self.pyprofMarkers, self.seqMarkers, self.otherMarkers, self.altMarkers, self.seqId, self.altSeqId, self.layer = info

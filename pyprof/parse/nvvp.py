@@ -90,19 +90,6 @@ class NVVP(object):
         self.db.execute('CREATE INDEX end_index ON marker (endTime)')
         self.db.execute('CREATE INDEX id_index ON marker (id)')
 
-    def getCPUInfo(self, info):
-        """
-		Given database results, return CPU start, end, pid, tid, and objId
-		"""
-        start = info['rStart']
-        end = info['rEnd']
-        pid = info['pid']
-        tid = info['tid']
-        tid = tid & 0xffffffff  #convert to unsigned
-        objId = self.encode_object_id(pid, tid)
-        assert (end > start)
-        return [start, end, pid, tid, objId]
-
     def getKernelInfo(self):
         """
 		Get GPU kernel info
@@ -113,7 +100,7 @@ class NVVP(object):
               "runtime.start as rStart, "
               "runtime.end as rEnd, "
               "coalesce(runtime.processId, driver.processId) as pid, "
-              "coalesce(runtime.threadId, driver.threadId) as tid, "
+              "coalesce(runtime.threadId, driver.threadId) & 0xFFFFFFFF as tid, "
               "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
               "gridX,gridY,gridZ,blockX,blockY,blockZ "
               "FROM {} AS kernels "
