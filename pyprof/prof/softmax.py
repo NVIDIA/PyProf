@@ -18,6 +18,7 @@
 from .base import OperatorLayerBase
 from .tensor import Tensor
 
+
 class Softmax(OperatorLayerBase):
 
     def __init__(self, d):
@@ -42,10 +43,10 @@ class Softmax(OperatorLayerBase):
         return
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
@@ -58,8 +59,8 @@ class Softmax(OperatorLayerBase):
         # http://ai.stanford.edu/~paskin/slam/javadoc/javaslam/util/Flops.html#exp()
         # TODO: consider direction
         e = self.input.size
-        f = e * 20 # denominator, exp all elements and reduce
-        f += e * 20 # numerator, exp all elements and divide
+        f = e * 20  # denominator, exp all elements and reduce
+        f += e * 20  # numerator, exp all elements and divide
         return f
 
     def bytes(self):
@@ -69,6 +70,7 @@ class Softmax(OperatorLayerBase):
         # bprop is 4 reads, 1 write
         b *= 3 if self.dir == "fprop" else 5
         return b
+
 
 class LogSoftmax(OperatorLayerBase):
 
@@ -100,10 +102,10 @@ class LogSoftmax(OperatorLayerBase):
         return
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
@@ -116,8 +118,8 @@ class LogSoftmax(OperatorLayerBase):
         # http://ai.stanford.edu/~paskin/slam/javadoc/javaslam/util/Flops.html#exp()
         # TODO: consider direction
         e = self.input.size
-        f = e * 20 # denominator, exp all elements and reduce
-        f += e # numerator, just a subtraction
+        f = e * 20  # denominator, exp all elements and reduce
+        f += e  # numerator, just a subtraction
         return f
 
     def bytes(self):
