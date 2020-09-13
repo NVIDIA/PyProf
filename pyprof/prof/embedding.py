@@ -18,6 +18,7 @@
 from .base import OperatorLayerBase
 from .tensor import Tensor
 
+
 class Embedding(OperatorLayerBase):
 
     def __init__(self, d):
@@ -48,10 +49,10 @@ class Embedding(OperatorLayerBase):
         return str(self.input) + ";" + str(self.embedding)
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
