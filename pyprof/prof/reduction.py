@@ -18,7 +18,7 @@
 from collections import OrderedDict
 from .utility import Utility
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
 
 class Mean(OperatorLayerBase):
 
@@ -28,10 +28,8 @@ class Mean(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (mod in ["torch", "Tensor"])
         assert (op == "mean")
@@ -44,44 +42,33 @@ class Mean(OperatorLayerBase):
 
         # The input can be a scalar or a tensor
         if 'shape' in i:  # tensor
-            self.shape = i['shape']
-            self.type = i['dtype']
+            self.inp = Tensor(i['shape'], i['dtype'])
         else:  # scalar
             assert ('value' in i)
-            self.shape = (1, )
-            self.type = i['type']
+            self.inp = Tensor([], i['type'])
 
         self.dir = d.dir
         self.sub = d.sub
 
     def params(self):
-        p = OrderedDict([('T', self.shape), ('type', self.type)])
-        return p
+        return str(self.inp)
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
-
-    def elems(self):
-        return Utility.numElems(self.shape)
+        return self._mod
 
     def bytes(self):
-        if self.sub == 0:
-            return self.elems() * Utility.typeToBytes(self.type)
-        else:
-            return 0
+        b = self.inp.bytes + self.inp.itemsize
+        return b if (self.sub == 0) else 0
 
     def flops(self):
-        if self.sub == 0:
-            return self.elems() + 1
-        else:
-            return 0
-
+        f = self.inp.size + 1
+        return f if (self.sub == 0) else 0
 
 class Sum(OperatorLayerBase):
 
