@@ -15,10 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-from .utility import Utility
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
 
 class BatchNorm(OperatorLayerBase):
 
@@ -28,49 +26,42 @@ class BatchNorm(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (op == "batch_norm")
         assert (len(args) >= 1)
         i = args[0]
         assert (i['type'] == "tensor")
 
-        self.shape = i['shape']
-        self.type = i['dtype']
+        self.inp = Tensor(i['shape'], i['dtype'])
         self.dir = d.dir
         self.sub = d.sub
 
     def params(self):
-        p = OrderedDict([('T', self.shape), ('type', self.type)])
-        return p
+        return str(self.inp)
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
-
-    def elems(self):
-        return Utility.numElems(self.shape)
+        return self._mod
 
     def flops(self):
         # Variance algo-dependent, but this is a reasonable value.
-        return self.elems() * 8
+        return self.inp.size * 8
 
     def bytes(self):
-        e = self.elems()
+        b = self.inp.bytes
         if self.dir == "fprop":
-            e *= 4
+            b *= 4
         else:
-            e *= 5
+            b *= 5
 
         if self.sub > 0:
             return 0
         else:
-            return e * Utility.typeToBytes(self.type)
+            return b
