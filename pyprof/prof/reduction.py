@@ -58,7 +58,7 @@ class Mean(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
         return self.mod_
