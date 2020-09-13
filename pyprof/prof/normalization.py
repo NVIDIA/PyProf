@@ -18,6 +18,7 @@
 from .base import OperatorLayerBase
 from .tensor import Tensor
 
+
 class BatchNorm(OperatorLayerBase):
 
     def __init__(self, d):
@@ -45,7 +46,7 @@ class BatchNorm(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
         return self.mod_
