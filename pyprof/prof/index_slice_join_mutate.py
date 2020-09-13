@@ -19,7 +19,9 @@ from collections import OrderedDict
 from .utility import Utility
 import numpy as np
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
+from functools import reduce
+import operator
 
 class Cat(OperatorLayerBase):
 
@@ -28,31 +30,29 @@ class Cat(OperatorLayerBase):
         mod = marker['mod']
         op = marker['op']
         args = marker['args']
-
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (mod == "torch")
         assert (op == "cat")
         assert (len(args) >= 2)
 
-        t = args[0]['dtype']
-        shapes = []
+        dtype = args[0]['dtype']
+        tensors = []
+
+        # Get all tensor arguments
+        args = filter(lambda x: x['type'] == "tensor", args)
 
         for arg in args:
-            if arg['type'] == "tensor":
-                assert (arg['dtype'] == t)
-                shapes.append(arg['shape'])
+            assert (arg['dtype'] == dtype)
+            t = Tensor(arg['shape'], dtype)
+            tensors.append(t)
 
-        self.type = t
-        self.shapes = shapes
+        self.inp = tensors
         self.sub = d.sub
 
     def params(self):
-        p = OrderedDict([('T', self.shapes), ('type', self.type)])
-        return p
+        return ";".join([str(t) for t in self.inp])
 
     def flops(self):
         return 0
@@ -61,23 +61,14 @@ class Cat(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def bytes(self):
-        b = 0
-        for s in self.shapes:
-            b += Utility.numElems(s)
-
-        b = 2 * b * Utility.typeToBytes(self.type)
-
-        if (self.sub == 0):
-            return b
-        else:
-            return 0
-
+        b = 2 * reduce(operator.add, [t.bytes for t in self.inp])
+        return b if (self.sub == 0) else 0
 
 class Reshape(OperatorLayerBase):
 
