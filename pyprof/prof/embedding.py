@@ -15,10 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-from .utility import Utility
 from .base import OperatorLayerBase
-
+from .tensor import Tensor
 
 class Embedding(OperatorLayerBase):
 
@@ -28,56 +26,46 @@ class Embedding(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
-        self.args = args
+        self._mod = mod
+        self._op = op
 
         assert (mod == "torch.nn.functional")
         assert (op == "embedding")
 
-        self.ishape = args[0]['shape']
-        self.itype = args[0]['dtype']
+        inp = args[0]
+        emb = args[1]
 
-        self.eshape = args[1]['shape']
-        self.etype = args[1]['dtype']
+        self.inp = Tensor(inp['shape'], inp['dtype'])
+        self.emb = Tensor(emb['shape'], emb['dtype'])
 
-        assert (len(self.eshape) == 2)
+        assert (len(self.emb.shape) == 2)
 
         self.dir = d.dir
         self.sub = d.sub
         return
 
     def params(self):
-        p = OrderedDict([('I', self.ishape), ('itype', self.itype), ('E', self.eshape), ('etype', self.etype)])
-        return p
+        return str(self.inp) + ";" + str(self.emb)
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def tc(self):
         return "-"
 
     def bytes(self):
-        ishape = self.ishape
-        itype = self.itype
-        eshape = self.eshape
-        etype = self.etype
-
-        ielems = Utility.numElems(ishape)
-
         b = 0
         if self.dir == "fprop":
-            #indices
-            b += ielems * Utility.typeToBytes(itype)
-            #read and write the embedding matrix
-            b += ielems * eshape[1] * 2 * Utility.typeToBytes(etype)
+            # read indices
+            b += self.inp.bytes
+            # read and write the embedding values
+            b += 2 * self.inp.size * self.emb.shape[1] * self.emb.itemsize
         else:
-            #3 times the size of the incoming gradient
-            b = ielems * eshape[1] * 3 * Utility.typeToBytes(etype)
+            # 3 times the size of the incoming gradient
+            b = 3 * self.inp.size * self.emb.shape[1] * self.emb.itemsize
 
             if self.sub > 0:
                 b = 0
