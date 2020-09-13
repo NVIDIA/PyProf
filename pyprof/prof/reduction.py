@@ -20,6 +20,7 @@ from .utility import Utility
 from .base import OperatorLayerBase
 from .tensor import Tensor
 
+
 class Mean(OperatorLayerBase):
 
     def __init__(self, d):
@@ -57,7 +58,7 @@ class Mean(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
         return self.mod_
@@ -73,6 +74,7 @@ class Mean(OperatorLayerBase):
             return self.input.size + 1
         else:
             return 0
+
 
 class Sum(OperatorLayerBase):
 
