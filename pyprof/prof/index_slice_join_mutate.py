@@ -23,6 +23,7 @@ from .tensor import Tensor
 from functools import reduce
 import operator
 
+
 class Cat(OperatorLayerBase):
 
     def __init__(self, d):
@@ -61,15 +62,16 @@ class Cat(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
-        return self.mod_
+        return self._mod
 
     def bytes(self):
         # 1 read, 1 write
         b = 2 * reduce(operator.add, [t.bytes for t in self.input])
         return b if (self.sub == 0) else 0
+
 
 class Reshape(OperatorLayerBase):
 
