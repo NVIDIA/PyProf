@@ -77,6 +77,9 @@ def main():
         info = kInfo[i]
         k = Kernel()
 
+        #Calculate/encode object ID
+        nvvp.encode_object_id(info)
+
         #Set kernel info
         k.setKernelInfo(info)
 

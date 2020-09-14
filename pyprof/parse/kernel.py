@@ -119,18 +119,9 @@ class Kernel(object):
         self.rDuration = info['rEnd'] - info['rStart']
         self.pid = info['pid']
         self.tid = info['tid']
+        self.objId = info['objId']
         assert(self.rStartTime < self.rEndTime)
         assert(self.rStartTime < self.kStartTime)
-
-        # Determine object ID
-        if 'objId' in info:
-            self.objId = info['objId']
-        else:
-		    # calculate it from the process ID (pid) and thread ID (tid)
-		    # object id = pid (little endian 4 bytes) + tid (little endian 8 bytes)
-            objId = struct.pack('<i', self.pid) + struct.pack('<q', self.tid)
-            objId = binascii.hexlify(objId).decode('ascii').upper()
-            self.objId = objId
 
     def setMarkerInfo(self, info):
         self.layerMarkers, self.traceMarkers, self.reprMarkers, self.pyprofMarkers, self.seqMarkers, self.otherMarkers, self.altMarkers, self.seqId, self.altSeqId, self.layer = info
