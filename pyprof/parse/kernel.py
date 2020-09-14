@@ -119,6 +119,8 @@ class Kernel(object):
         self.rDuration = info['rEnd'] - info['rStart']
         self.pid = info['pid']
         self.tid = info['tid']
+        assert(self.rStartTime < self.rEndTime)
+        assert(self.rStartTime < self.kStartTime)
 
         # Determine object ID
         if 'objId' in info:
