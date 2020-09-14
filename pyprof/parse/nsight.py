@@ -63,6 +63,10 @@ class Nsight(object):
         self.db.execute('CREATE INDEX end_index ON marker (end)')
         #self.db.execute('CREATE INDEX id_index ON marker (id)')
 
+    def encode_object_id(self, info):
+        # Nothing to do for nsight. objId comes out of database
+        assert 'objId' in info
+
     def getKernelInfo(self):
         """
 		Get GPU kernel info

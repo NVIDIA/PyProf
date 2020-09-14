@@ -34,15 +34,6 @@ class NVVP(object):
         self.db = db
         self.markerId = 0
 
-    def encode_object_id(self, pid, tid):
-        """
-		Given process id (pid) and thread id (tid), return the object id.
-		object id = pid (little endian 4 bytes) + tid (little endian 8 bytes)
-		"""
-        objId = struct.pack('<i', pid) + struct.pack('<q', tid)
-        objId = binascii.hexlify(objId).decode('ascii').upper()
-        return objId
-
     def getProfileStart(self):
         """
 		Get the profile start time
@@ -89,6 +80,14 @@ class NVVP(object):
         self.db.execute('CREATE INDEX start_index ON marker (startTime)')
         self.db.execute('CREATE INDEX end_index ON marker (endTime)')
         self.db.execute('CREATE INDEX id_index ON marker (id)')
+
+    def encode_object_id(self, info):
+        """
+        Encode the object ID from the pid and tid values, and put into dict
+        """
+        objId = struct.pack('<i', info['pid']) + struct.pack('<q', info['tid'])
+        objId = binascii.hexlify(objId).decode('ascii').upper()
+        info['objId'] = objId
 
     def getKernelInfo(self):
         """
