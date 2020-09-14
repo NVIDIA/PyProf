@@ -211,12 +211,11 @@ def add_wrapper(mod, fn_name):
         if config.capture_input_ops:
             dlprof.capture_outputs(dlprof.call_id, result)
             # Store the callid -> op_name mapping
-            if config.func_stack_enabled:
-                if traceMarker_str is not "":
-                    traceMarker_str = traceMarker_str.replace("\'", "\"")
-                    traceMarker_dict = json.loads(traceMarker_str)
-                    dlprof.call_id_to_op_map[dlprof.call_id] = traceMarker_dict['funcStack']
-                dlprof.call_id = dlprof.call_id + 1
+            if traceMarker_str is not "":
+                traceMarker_str = traceMarker_str.replace("\'", "\"")
+                traceMarker_dict = json.loads(traceMarker_str)
+                dlprof.call_id_to_op_map[dlprof.call_id] = traceMarker_dict['funcStack']
+            dlprof.call_id = dlprof.call_id + 1
 
         return result
 
@@ -539,7 +538,10 @@ def init(*args, **kwargs):
     Initialize pyprof and monkey-patch Torch functions
 
     Kwargs:
-        enable_function_stack (bool): When true, function stack information will be added to NVTX markers
+        enable_function_stack (bool): When true, function stack information 
+            will be added to NVTX markers
+        capture_input_ops (bool): When true, input tensor names will be added 
+            to NVTX markers and enable_function_stack is set to True.
     """
 
     Config(*args, **kwargs)
