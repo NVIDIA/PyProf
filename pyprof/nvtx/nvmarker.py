@@ -117,6 +117,7 @@ def traceMarker(op_name):
             else:
                 ins_frame = ins.currentframe()
                 fn_name = dlprof.build_function_stack(idx, func_stack, frame.name, prev_fn, op_name, stack, ins_frame)
+                del ins_frame
             prev_fn = fnl
 
             # Append this frame's info into the function stack
@@ -165,7 +166,7 @@ def add_wrapper(mod, fn_name):
     def wrapper_func(*args, **kwargs):
 
         global wrappers_enabled
-
+        traceMarker_str = ""
         input_callid_list = []
 
         if config.capture_input_ops:
@@ -211,9 +212,10 @@ def add_wrapper(mod, fn_name):
             dlprof.capture_outputs(dlprof.call_id, result)
             # Store the callid -> op_name mapping
             if config.func_stack_enabled:
-                traceMarker_str = traceMarker_str.replace("\'", "\"")
-                traceMarker_dict = json.loads(traceMarker_str)
-                dlprof.call_id_to_op_map[dlprof.call_id] = traceMarker_dict['funcStack']
+                if traceMarker_str is not "":
+                    traceMarker_str = traceMarker_str.replace("\'", "\"")
+                    traceMarker_dict = json.loads(traceMarker_str)
+                    dlprof.call_id_to_op_map[dlprof.call_id] = traceMarker_dict['funcStack']
                 dlprof.call_id = dlprof.call_id + 1
 
         return result
