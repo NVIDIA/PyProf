@@ -71,21 +71,22 @@ class Nsight(object):
         """
 		Get GPU kernel info
 		"""
-        cmd = ("SELECT "
-              "demangledName as kNameId, "
-              "strings.value as name, "
-              "runtime.start as rStart, "
-              "runtime.end as rEnd, "
-              "runtime.globalTid as objId, "
-              "runtime.globalTid / 0x1000000 % 0x1000000 AS pid, "
-              "runtime.globalTid % 0x1000000 AS tid, "
-              "kernels.globalPid / 0x1000000 % 0x1000000 AS kpid, "
-              "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
-              "gridX,gridY,gridZ,blockX,blockY,blockZ "
-              "FROM {} AS kernels "
-              "JOIN {} AS strings ON (kNameId = strings.Id) "
-              "JOIN {} AS runtime ON (kernels.correlationId = runtime.correlationId AND kpid = pid) "
-              ).format(self.kernelT, self.stringT, self.runtimeT)
+        cmd = (
+            "SELECT "
+            "demangledName as kNameId, "
+            "strings.value as name, "
+            "runtime.start as rStart, "
+            "runtime.end as rEnd, "
+            "runtime.globalTid as objId, "
+            "runtime.globalTid / 0x1000000 % 0x1000000 AS pid, "
+            "runtime.globalTid % 0x1000000 AS tid, "
+            "kernels.globalPid / 0x1000000 % 0x1000000 AS kpid, "
+            "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
+            "gridX,gridY,gridZ,blockX,blockY,blockZ "
+            "FROM {} AS kernels "
+            "JOIN {} AS strings ON (kNameId = strings.Id) "
+            "JOIN {} AS runtime ON (kernels.correlationId = runtime.correlationId AND kpid = pid) "
+        ).format(self.kernelT, self.stringT, self.runtimeT)
         result = self.db.select(cmd)
         return result
 
