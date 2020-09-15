@@ -86,7 +86,7 @@ def main():
         #Get and set marker and seqid info
         info = nvvp.getMarkerInfo(k.objId, k.rStartTime, k.rEndTime)
         k.setMarkerInfo(info)
-        
+
         #If the seqId contains both 0 and non zero integers, remove 0.
         if any(seq != 0 for seq in k.seqId) and (0 in k.seqId):
             k.seqId.remove(0)

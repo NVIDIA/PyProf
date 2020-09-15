@@ -93,19 +93,21 @@ class NVVP(object):
         """
 		Get GPU kernel info
 		"""
-        cmd = ("SELECT "
-              "name AS kNameId, "
-              "strings.value as name, "
-              "coalesce(runtime.start, driver.start) as rStart, "
-              "coalesce(runtime.end, driver.end) as rEnd, "
-              "coalesce(runtime.processId, driver.processId) as pid, "
-              "coalesce(runtime.threadId, driver.threadId) & 0xFFFFFFFF as tid, "
-              "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
-              "gridX,gridY,gridZ,blockX,blockY,blockZ "
-              "FROM {} AS kernels "
-              "JOIN {} AS strings ON (KNameId = strings._id_) "
-              "LEFT JOIN {} AS runtime ON (kernels.correlationId = runtime.correlationId) "
-              "LEFT JOIN {} AS driver ON (kernels.correlationId = driver.correlationId) ").format(self.kernelT, self.stringT, self.runtimeT, self.driverT)
+        cmd = (
+            "SELECT "
+            "name AS kNameId, "
+            "strings.value as name, "
+            "coalesce(runtime.start, driver.start) as rStart, "
+            "coalesce(runtime.end, driver.end) as rEnd, "
+            "coalesce(runtime.processId, driver.processId) as pid, "
+            "coalesce(runtime.threadId, driver.threadId) & 0xFFFFFFFF as tid, "
+            "kernels.correlationId,kernels.start,kernels.end,deviceId,streamId,"
+            "gridX,gridY,gridZ,blockX,blockY,blockZ "
+            "FROM {} AS kernels "
+            "JOIN {} AS strings ON (KNameId = strings._id_) "
+            "LEFT JOIN {} AS runtime ON (kernels.correlationId = runtime.correlationId) "
+            "LEFT JOIN {} AS driver ON (kernels.correlationId = driver.correlationId) "
+        ).format(self.kernelT, self.stringT, self.runtimeT, self.driverT)
         result = self.db.select(cmd)
         return result
 

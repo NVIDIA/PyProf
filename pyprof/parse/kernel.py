@@ -120,8 +120,8 @@ class Kernel(object):
         self.pid = info['pid']
         self.tid = info['tid']
         self.objId = info['objId']
-        assert(self.rStartTime < self.rEndTime)
-        assert(self.rStartTime < self.kStartTime)
+        assert (self.rStartTime < self.rEndTime)
+        assert (self.rStartTime < self.kStartTime)
 
     def setMarkerInfo(self, info):
         self.layerMarkers, self.traceMarkers, self.reprMarkers, self.pyprofMarkers, self.seqMarkers, self.otherMarkers, self.altMarkers, self.seqId, self.altSeqId, self.layer = info
