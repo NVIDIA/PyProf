@@ -28,9 +28,6 @@ class Pointwise(OperatorLayerBase):
     # TODO: Refine calculations based on direction.
     # TODO: Refine calculations for non-arithmetic ops.
 
-    # Memset
-    memset = ["fill_", "ones", "ones_like", "zero_", "zeros", "zeros_like"]
-
     # Unary
     unary = ["abs", "abs_", "neg", "neg_", "reciprocal", "reciprocal_"]
     unary += ["__abs__", "__neg__"]
@@ -91,7 +88,7 @@ class Pointwise(OperatorLayerBase):
     # Misc
     misc = ["digamma", "lerp", "lerp_", "mvlgamma"]
 
-    ops = memset + unary + binary + ibinary + comp + logical + ilogical + \
+    ops = unary + binary + ibinary + comp + logical + ilogical + \
           ternary + exp_log + power + sqrt + representation + trig_trans + \
           error + misc
 
@@ -121,12 +118,15 @@ class Pointwise(OperatorLayerBase):
         self.inp = []
 
         for arg in args:
-            if (arg['type'] == "tensor"):
-                t = Tensor(arg['shape'], arg['dtype'])
-            else: # scalar
-                t = Tensor([], arg['type'])
+            t = arg['type']
+            if (t == "tensor"):
+                tensor = Tensor(arg['shape'], arg['dtype'])
+            elif t in ['float', 'int']:
+                tensor = Tensor([], t)
+            else:
+                assert False
 
-            self.inp.append(t)
+            self.inp.append(tensor)
 
     def params(self):
         return ";".join([str(t) for t in self.inp])
@@ -143,14 +143,8 @@ class Pointwise(OperatorLayerBase):
     def bytes_flops(self):
         b = f = 0
 
-        # Memset
-        if self.op() in Pointwise.memset:
-            assert (len(self.inp) == 1)
-            b = self.inp[0].bytes
-            f = 0
-
         # Unary
-        elif self.op() in Pointwise.unary + Pointwise.representation:
+        if self.op() in Pointwise.unary + Pointwise.representation:
             assert (len(self.inp) == 1)
             b = 2 * self.inp[0].bytes
             f = self.inp[0].size
