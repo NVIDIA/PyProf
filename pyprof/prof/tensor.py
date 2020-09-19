@@ -15,11 +15,12 @@
 # limitations under the License.
 
 from functools import reduce
+import numpy as np
 from .dtype import Dtype
 
 class Tensor(object):
     def __init__(self, shape, dtype):
-        assert type(shape) == tuple
+        assert type(shape) in [tuple, list]
         assert dtype in Dtype.types()
         self._shape = shape
         self._dtype = dtype
@@ -55,12 +56,43 @@ class Tensor(object):
     def bytes(self):
         return self.size * self.itemsize
 
+    @staticmethod
+    def broadcast(tensors):
+        r'''
+        The input is a list of Tensors.
+        The output is a Tensor.
+        '''
+
+        assert len(tensors) > 1
+        shape = tensors[0].shape
+        # TODO: Assume the output dtype is the same as the first arg
+        dt = tensors[0].dtype
+
+        # Check if shapes are different
+        if any(t.shape != shape for t in tensors):
+            x = [np.empty(t.shape, t.dtype) for t in tensors]
+            try:
+                out = np.broadcast(*x)
+            except:
+                assert False # not broadcastable
+            return Tensor(out.shape, dt)
+        else:
+            return Tensor(shape, dt)
+
 def main():
     for shape in [(), (1,), (3,7), (3,7,11)]:
         for dt in Dtype.types():
             t = Tensor(shape, dt)
             print(t.ndim, str(t.shape).replace(" ", ""), \
                     t.size, t.dtype, t.itemsize, t.bytes, t)
+
+    # Broadcast test
+    a = Tensor([1,3], "int")
+    b = Tensor([3,1], "float")
+    c = Tensor([1,3], "float64")
+    d = np.ones([], "float64")
+    out = Tensor.broadcast([a,b,c,d])
+    print(out.shape)
 
 if __name__ == '__main__':
     main()
