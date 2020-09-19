@@ -29,7 +29,7 @@ class Pointwise(OperatorLayerBase):
     # TODO: Refine calculations for non-arithmetic ops.
 
     # Memset
-    memset = ["zero_", "zeros", "zeros_like", "ones", "ones_like"]
+    memset = ["fill_", "ones", "ones_like", "zero_", "zeros", "zeros_like"]
 
     # Unary
     unary = ["abs", "abs_", "neg", "neg_", "reciprocal", "reciprocal_"]
