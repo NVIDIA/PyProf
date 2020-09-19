@@ -99,8 +99,8 @@ class Pointwise(OperatorLayerBase):
         args = marker['args']
 
         self.marker = marker
-        self.mod_ = mod
-        self.op_ = op
+        self._mod = mod
+        self._op = op
         self.args = args
 
         self.dir = d.dir
@@ -135,7 +135,7 @@ class Pointwise(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self.op_
+        return self._op
 
     def mod(self):
         return self.mod_
