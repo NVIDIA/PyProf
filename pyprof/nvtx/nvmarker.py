@@ -528,6 +528,14 @@ def patch_model_configs():
     patch_never_call(torch.autograd, "gradgradcheck", "gradgradcheck")
     patch_never_call(torch.autograd.profiler.record_function, "__init__", "record_function")
 
+    # Patch both AMP libraries
+    #
+    import importlib
+    if importlib.util.find_spec("apex.amp") is not None:
+        import apex.amp
+        patch_never_call_with_args(apex.amp, "initialize", "amp_enabled", {"enabled": {True}})
+    patch_never_call_with_args(torch.cuda.amp, "autocast", "amp_enabled", {"enabled": {True}})
+
     patch_never_call_with_args(torch.autograd.profiler.profile, "__init__", "profile", {"enabled": {True}})
     patch_never_call_with_args(torch.autograd.set_detect_anomaly, "__init__", "detect_anomaly", {"mode": {True}})
     patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
@@ -548,10 +556,10 @@ def init(*args, **kwargs):
 
     print("Initializing NVTX monkey patches")
 
+    patch_apex()
     patch_dataloader()
     patch_torch_classes()
     patch_torch_nn_forward_functions()
-    patch_apex()
     patch_model_configs()
 
     print("Done with NVTX monkey patching")
