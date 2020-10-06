@@ -5,3 +5,7 @@ __pycache__
 *.dict
 *.csv
 *.log
+
+build/
+dist/
+nvidia_pyprof.egg-info/

@@ -21,7 +21,7 @@ with open('requirements.txt', 'r') as f:
     required = f.read().splitlines()
 
 with open('VERSION', 'r') as f:
-    version = f.read()
+    version = f.read()[:-4]
 
 setup(
     name='nvidia-pyprof',
@@ -37,7 +37,7 @@ setup(
     description='NVIDIA Pytorch Profiler',
     install_requires=required,
     classifiers=[
-            'Development Status :: 5 - Production/Stable,
+            'Development Status :: 5 - Production/Stable',
             'Intended Audience :: Developers',
             'Intended Audience :: Science/Research',
             'Intended Audience :: Information Technology',
