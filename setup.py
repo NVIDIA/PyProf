@@ -24,7 +24,7 @@ with open('VERSION', 'r') as f:
     version = f.read()
 
 setup(
-    name='pyprof',
+    name='nvidia-pyprof',
     version=version,
     packages=find_packages(),
     author="Aditya Agrawal,Marek Kolodziej",
@@ -32,7 +32,26 @@ setup(
     maintainer="Elias Bermudez",
     maintainer_email="dbermudez13@gmail.com",
     url="https://github.com/NVIDIA/PyProf",
+    download_url="https://github.com/NVIDIA/PyProf",
     license="BSD 3-Clause License",
     description='NVIDIA Pytorch Profiler',
     install_requires=required,
+    classifiers=[
+            'Development Status :: 5 - Production/Stable,
+            'Intended Audience :: Developers',
+            'Intended Audience :: Science/Research',
+            'Intended Audience :: Information Technology',
+            'Topic :: Scientific/Engineering',
+            'Topic :: Scientific/Engineering :: Artificial Intelligence',
+            'Topic :: Utilities',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.6',
+            'Environment :: Console',
+            'Natural Language :: English',
+            'Operating System :: OS Independent',
+    ],
+    keywords='nvidia, profiling, deep learning, ' \
+             'machine learning, supervised learning, ' \
+             'unsupervised learning, reinforcement learning, ',
+    platforms=["Linux"],
 )
