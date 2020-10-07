@@ -54,4 +54,5 @@ setup(
              'machine learning, supervised learning, ' \
              'unsupervised learning, reinforcement learning, ',
     platforms=["Linux"],
+    include_package_data=True,
 )
