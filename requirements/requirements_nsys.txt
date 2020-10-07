@@ -1,0 +1,1 @@
+nvidia-nsys-cli>=2020.4.1.117
