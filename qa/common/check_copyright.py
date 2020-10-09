@@ -24,9 +24,12 @@ SKIP_EXTS = ('jpeg', 'jpg', 'pgm', 'png',
              'preprocessed', 'jmx', 'gz',
              'caffemodel', 'json')
 SKIP_PATHS = ('requirements.txt',
+              'requirements/requirements_nsys.txt',
+              'requirements/requirements.txt',
               'qa/L0_docs/VERSION',
               'LICENSE',
-              'VERSION')
+              'VERSION',
+              'MANIFEST.in')
 
 COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9]),'
 COPYRIGHT_YEAR_RE1 = 'Copyright \\(c\\) (20[0-9][0-9])-(20[0-9][0-9]),'
