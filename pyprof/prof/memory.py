@@ -30,27 +30,27 @@ class OneZero(OperatorLayerBase):
         assert mod in ["torch", "Tensor"]
         assert op in OneZero.ops
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert(len(args) == 1)
         arg = args[0]
-        self.inp = Tensor(arg['shape'], arg['dtype'])
+        self.input = Tensor(arg['shape'], arg['dtype'])
 
     def params(self):
-        return str(self.inp)
+        return str(self.input)
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def bytes(self):
-        return self.inp.bytes
+        return self.input.bytes
 
     def flops(self):
         return 0
@@ -62,27 +62,27 @@ class Fill(OperatorLayerBase):
         assert mod == "Tensor"
         assert op == "fill_"
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert(len(args) == 2)
         arg = args[0]
-        self.inp = Tensor(arg['shape'], arg['dtype'])
+        self.input = Tensor(arg['shape'], arg['dtype'])
 
     def params(self):
-        return str(self.inp)
+        return str(self.input)
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def bytes(self):
-        return self.inp.bytes
+        return self.input.bytes
 
     def flops(self):
         return 0
@@ -94,30 +94,30 @@ class Full(OperatorLayerBase):
         assert mod == "torch"
         assert op == "full"
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert(len(args) == 2)
         arg1, arg2 = args
         assert arg1['type'] in ['list', 'tuple']
         # TODO: Add more types for arg2
         assert arg2['type'] in ['float', 'int']
-        self.out = Tensor(arg1['value'], arg2['type'])
+        self.output = Tensor(arg1['value'], arg2['type'])
 
     def params(self):
-        return str(self.out)
+        return str(self.output)
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def bytes(self):
-        return self.out.bytes
+        return self.output.bytes
 
     def flops(self):
         return 0
