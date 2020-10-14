@@ -28,8 +28,8 @@ class Mean(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert (mod in ["torch", "Tensor"])
         assert (op == "mean")
@@ -42,33 +42,37 @@ class Mean(OperatorLayerBase):
 
         # The input can be a scalar or a tensor
         if 'shape' in i:  # tensor
-            self.inp = Tensor(i['shape'], i['dtype'])
+            self.input = Tensor(i['shape'], i['dtype'])
         else:  # scalar
             assert ('value' in i)
-            self.inp = Tensor([], i['type'])
+            self.input = Tensor([], i['type'])
 
         self.dir = d.dir
         self.sub = d.sub
 
     def params(self):
-        return str(self.inp)
+        return str(self.input)
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def bytes(self):
-        b = self.inp.bytes + self.inp.itemsize
-        return b if (self.sub == 0) else 0
+        if self.sub == 0:
+            return self.input.bytes + self.input.itemsize
+        else:
+            return 0
 
     def flops(self):
-        f = self.inp.size + 1
-        return f if (self.sub == 0) else 0
+        if self.sub == 0:
+            return self.input.size + 1
+        else:
+            return 0
 
 class Sum(OperatorLayerBase):
 
