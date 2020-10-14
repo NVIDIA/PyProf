@@ -54,10 +54,10 @@ class Convert(OperatorLayerBase):
         return str(self.input)
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def tc(self):
         return "-"
