@@ -99,8 +99,8 @@ class Pointwise(OperatorLayerBase):
         args = marker['args']
 
         self.marker = marker
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
         self.args = args
 
         self.dir = d.dir
@@ -135,10 +135,10 @@ class Pointwise(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def bytes_flops(self):
         b = f = 0
