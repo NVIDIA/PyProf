@@ -43,10 +43,10 @@ class Softmax(OperatorLayerBase):
         return
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def tc(self):
         return "-"
@@ -102,10 +102,10 @@ class LogSoftmax(OperatorLayerBase):
         return
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def tc(self):
         return "-"
