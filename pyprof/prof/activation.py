@@ -63,6 +63,8 @@ class Activation(OperatorLayerBase):
         # TODO: revise based on op
         direction = self.dir
         b = self.input.bytes
+        # fprop is 1 read, 1 write
+        # bprop is 2 reads, 1 write
         b *= 2 if direction == "fprop" else 3
         return b
 
