@@ -30,8 +30,8 @@ class Cat(OperatorLayerBase):
         mod = marker['mod']
         op = marker['op']
         args = marker['args']
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert (mod == "torch")
         assert (op == "cat")
@@ -48,11 +48,11 @@ class Cat(OperatorLayerBase):
             t = Tensor(arg['shape'], dtype)
             tensors.append(t)
 
-        self.inp = tensors
+        self.input = tensors
         self.sub = d.sub
 
     def params(self):
-        return ";".join([str(t) for t in self.inp])
+        return ";".join([str(t) for t in self.input])
 
     def flops(self):
         return 0
@@ -61,13 +61,14 @@ class Cat(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def bytes(self):
-        b = 2 * reduce(operator.add, [t.bytes for t in self.inp])
+        # 1 read, 1 write
+        b = 2 * reduce(operator.add, [t.bytes for t in self.input])
         return b if (self.sub == 0) else 0
 
 class Reshape(OperatorLayerBase):
