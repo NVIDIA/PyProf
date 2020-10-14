@@ -62,8 +62,11 @@ class Activation(OperatorLayerBase):
         # TODO: revise based on op
         direction = self.dir
         b = self.input.bytes
+<<<<<<< HEAD
         # fprop is 1 read, 1 write
         # bprop is 2 reads, 1 write
+=======
+>>>>>>> Reverted to "_" at the end of private member name.
         b *= 2 if direction == "fprop" else 3
         return b
 
@@ -71,7 +74,7 @@ class Activation(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
