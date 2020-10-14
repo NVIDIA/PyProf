@@ -62,10 +62,10 @@ class Cat(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def bytes(self):
         # 1 read, 1 write
