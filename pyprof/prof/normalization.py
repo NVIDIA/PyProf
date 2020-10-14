@@ -26,36 +26,38 @@ class BatchNorm(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert (op == "batch_norm")
         assert (len(args) >= 1)
         i = args[0]
         assert (i['type'] == "tensor")
 
-        self.inp = Tensor(i['shape'], i['dtype'])
+        self.input = Tensor(i['shape'], i['dtype'])
         self.dir = d.dir
         self.sub = d.sub
 
     def params(self):
-        return str(self.inp)
+        return str(self.input)
 
     def tc(self):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def flops(self):
         # Variance algo-dependent, but this is a reasonable value.
-        return self.inp.size * 8
+        return self.input.size * 8
 
     def bytes(self):
-        b = self.inp.bytes
+        b = self.input.bytes
+        # fprop is 2 reads, 2 writes
+        # bprop is 4 reads, 1 write
         if self.dir == "fprop":
             b *= 4
         else:
