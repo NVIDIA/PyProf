@@ -26,8 +26,8 @@ class Softmax(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert (mod == "torch.nn.functional")
         assert (op == "softmax")
@@ -37,34 +37,36 @@ class Softmax(OperatorLayerBase):
 
         assert (len(args) <= 2)
         arg = args[0]
-        self.inp = Tensor(arg['shape'], arg['dtype'])
+        self.input = Tensor(arg['shape'], arg['dtype'])
         self.dir = d.dir
         return
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def tc(self):
         return "-"
 
     def params(self):
-        return str(self.inp)
+        return str(self.input)
 
     def flops(self):
         # An approximation
         # http://ai.stanford.edu/~paskin/slam/javadoc/javaslam/util/Flops.html#exp()
         # TODO: consider direction
-        e = self.inp.size
+        e = self.input.size
         f = e * 20 # denominator, exp all elements and reduce
         f += e * 20 # numerator, exp all elements and divide
         return f
 
     def bytes(self):
         # TODO: verify
-        b = self.inp.bytes
+        b = self.input.bytes
+        # fprop is 2 reads, 1 write
+        # bprop is 4 reads, 1 write
         b *= 3 if self.dir == "fprop" else 5
         return b
 
@@ -76,8 +78,8 @@ class LogSoftmax(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert (mod in ["torch", "torch.nn.functional"])
         assert (op == "log_softmax")
@@ -93,33 +95,35 @@ class LogSoftmax(OperatorLayerBase):
         else:
             i = list(filter(lambda x: x['name'] == "input", args))[0]
 
-        self.inp = Tensor(i['shape'], i['dtype'])
+        self.input = Tensor(i['shape'], i['dtype'])
         self.dir = d.dir
         return
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def tc(self):
         return "-"
 
     def params(self):
-        return str(self.inp)
+        return str(self.input)
 
     def flops(self):
         # An approximation
         # http://ai.stanford.edu/~paskin/slam/javadoc/javaslam/util/Flops.html#exp()
         # TODO: consider direction
-        e = self.inp.size
+        e = self.input.size
         f = e * 20 # denominator, exp all elements and reduce
         f += e # numerator, just a subtraction
         return f
 
     def bytes(self):
         # TODO: verify
-        b = self.inp.bytes
+        b = self.input.bytes
+        # fprop is 2 reads, 1 write
+        # bprop is 4 reads, 1 write
         b *= 3 if self.dir == "fprop" else 5
         return b
