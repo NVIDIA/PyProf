@@ -37,8 +37,8 @@ class Activation(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert (mod in ["torch.nn.functional", "torch", "Tensor"])
 
@@ -49,20 +49,20 @@ class Activation(OperatorLayerBase):
         arg = args[0]
         assert (arg['type'] == "tensor")
 
-        self.inp = Tensor(arg['shape'], arg['dtype'])
+        self.input = Tensor(arg['shape'], arg['dtype'])
         self.dir = d.dir
 
     def params(self):
-        return str(self.inp)
+        return str(self.input)
 
     def flops(self):
         # TODO: revise based on op
-        return self.inp.size
+        return self.input.size
 
     def bytes(self):
         # TODO: revise based on op
         direction = self.dir
-        b = self.inp.bytes
+        b = self.input.bytes
         b *= 2 if direction == "fprop" else 3
         return b
 
@@ -70,7 +70,7 @@ class Activation(OperatorLayerBase):
         return "-"
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
