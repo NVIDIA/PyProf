@@ -26,32 +26,32 @@ class Embedding(OperatorLayerBase):
         op = marker['op']
         args = marker['args']
 
-        self._mod = mod
-        self._op = op
+        self.mod_ = mod
+        self.op_ = op
 
         assert (mod == "torch.nn.functional")
         assert (op == "embedding")
 
-        inp = args[0]
-        emb = args[1]
+        input = args[0]
+        embedding = args[1]
 
-        self.inp = Tensor(inp['shape'], inp['dtype'])
-        self.emb = Tensor(emb['shape'], emb['dtype'])
+        self.input = Tensor(input['shape'], input['dtype'])
+        self.embedding = Tensor(embedding['shape'], embedding['dtype'])
 
-        assert (len(self.emb.shape) == 2)
+        assert (len(self.embedding.shape) == 2)
 
         self.dir = d.dir
         self.sub = d.sub
         return
 
     def params(self):
-        return str(self.inp) + ";" + str(self.emb)
+        return str(self.input) + ";" + str(self.embedding)
 
     def op(self):
-        return self._op
+        return self.op_
 
     def mod(self):
-        return self._mod
+        return self.mod_
 
     def tc(self):
         return "-"
@@ -60,12 +60,12 @@ class Embedding(OperatorLayerBase):
         b = 0
         if self.dir == "fprop":
             # read indices
-            b += self.inp.bytes
+            b += self.input.bytes
             # read and write the embedding values
-            b += 2 * self.inp.size * self.emb.shape[1] * self.emb.itemsize
+            b += 2 * self.input.size * self.embedding.shape[1] * self.embedding.itemsize
         else:
             # 3 times the size of the incoming gradient
-            b = 3 * self.inp.size * self.emb.shape[1] * self.emb.itemsize
+            b = 3 * self.input.size * self.embedding.shape[1] * self.embedding.itemsize
 
             if self.sub > 0:
                 b = 0
