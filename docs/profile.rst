@@ -151,13 +151,17 @@ Run Nsight Systems to generate a SQLite file. ::
   $ nsys profile 
       -f true                  # Overwrite existing files
       -o net                   # Create net.qdrep (used by Nsys viewer)
-      -c cudaProfileApi        # Optional argument required for profiler start/stop
+      -c cudaProfilerApi       # Optional argument required for profiler start/stop
       --stop-on-range-end true # Optional argument required for profiler start/stop
       --export sqlite          # Export net.sql (similar to NVProf) 
       python net.py
 
 If using ``profiler.start()`` and ``profiler.stop()`` in ``net.py``, the options
 ``-c cudaProfileApi --stop-on-range-end true`` are required.
+
+**Note:** if you are experiencing slow profiling, nsys contains an option
+  -s none
+which will disable CPU sampling and significantly speed up profiling.
 
 .. _section-parse-sql-file:
 
