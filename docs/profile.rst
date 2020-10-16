@@ -157,10 +157,12 @@ Run Nsight Systems to generate a SQLite file. ::
       python net.py
 
 If using ``profiler.start()`` and ``profiler.stop()`` in ``net.py``, the options
-``-c cudaProfileApi --stop-on-range-end true`` are required.
+``-c cudaProfilerApi --stop-on-range-end true`` are required.
 
-**Note:** if you are experiencing slow profiling, nsys contains an option
-  -s none
+**Note:** if you are experiencing slow profiling, nsys contains an option ::
+
+  **-s none**
+  
 which will disable CPU sampling and significantly speed up profiling.
 
 .. _section-parse-sql-file:
