@@ -85,7 +85,7 @@ Quick Installation Instructions
 
 * Should display ::
 
-   pyprof            3.6.0.dev0
+   pyprof            3.7.0.dev0
 
 .. quick-install-end-marker-do-not-remove
 
