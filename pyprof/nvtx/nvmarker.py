@@ -531,7 +531,7 @@ def patch_model_configs():
     # Patch both AMP libraries
     #
     import importlib
-    if importlib.util.find_spec("apex.amp") is not None:
+    if importlib.util.find_spec("apex") is not None and importlib.util.find_spec("apex.amp") is not None:
         import apex.amp
         patch_never_call_with_args(apex.amp, "initialize", "amp_enabled", {"enabled": {True}})
     patch_never_call_with_args(torch.cuda.amp, "autocast", "amp_enabled", {"enabled": {True}})
