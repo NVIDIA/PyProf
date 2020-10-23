@@ -49,6 +49,7 @@ from .normalization import BatchNorm
 from .randomSample import RandPerm
 from .loss import MSELoss
 from .data import Data
+from .memory import OneZero, Fill, Full
 
 
 def findFpropKernel(seq):
@@ -162,6 +163,16 @@ def foo(mod, op, d):
     #random
     elif op[0] == "randperm":
         xx = RandPerm(d)
+
+    #memory
+    elif op[0] in OneZero.ops:
+        xx = OneZero(d)
+
+    elif op[0] == "fill_":
+        xx = Fill(d)
+
+    elif op[0] == "full":
+        xx = Full(d)
 
     #misc
     elif op[0] == "copy_":
