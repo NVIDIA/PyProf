@@ -40,6 +40,7 @@ import inspect as ins
 import traceback
 import math
 import json
+import importlib
 from .config import Config
 from .dlprof import DLProf
 
@@ -324,7 +325,6 @@ def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
 def patchClass(cls):
     for f in dir(cls):
         if isfunc(cls, f):
-            print("  TKG -- patching ", f)
             add_wrapper(cls, f)
 
 
@@ -386,74 +386,34 @@ def patch_dataloader():
 def patch_apex():
     """Monkey-patch functions in APEX"""
 
-    # TKG FULL LIST OF C:
-    # amp_C
-    # fused_adam_cuda
-    # fused_lamb_cuda
-    # fused_layer_norm_cuda
-    # distributed_lamb_cuda
-
-    import importlib
-    import apex
-    print("TKG APEX START ----\n")
-
-    print("TKG amp_C START ----\n")
     if importlib.util.find_spec("amp_C") is not None:
         import amp_C
         patchClass(amp_C)
 
-    print("TKG fused_adam_cuda start ----\n")
     if importlib.util.find_spec("fused_adam_cuda") is not None:
         import fused_adam_cuda
         patchClass(fused_adam_cuda)
 
-    print("TKG fused_lamb_cuda start ----\n")
     if importlib.util.find_spec("fused_lamb_cuda") is not None:
         import fused_lamb_cuda
         patchClass(fused_lamb_cuda)
 
-    print("TKG fused_layer_norm_cuda ----\n")
     if importlib.util.find_spec("fused_layer_norm_cuda") is not None:
         import fused_layer_norm_cuda
         patchClass(fused_layer_norm_cuda)
 
-    print("TKG distributed_lamb_cuda ----\n")
     if importlib.util.find_spec("distributed_lamb_cuda") is not None:
         import distributed_lamb_cuda
         patchClass(distributed_lamb_cuda)
 
-    print("TKG xentropy_cuda ----\n")
     if importlib.util.find_spec("xentropy_cuda") is not None:
         import xentropy_cuda
         patchClass(xentropy_cuda)
 
-    print("TKG mlp_cuda ----\n")
     if importlib.util.find_spec("mlp_cuda") is not None:
         import mlp_cuda
         patchClass(mlp_cuda)
 
-    print("TKG done ----\n")
-
-    #    if importlib.util.find_spec("apex") is not None:
-    #        print("TKG generic APEX----\n")
-    #        import apex
-    #        for c in dir(apex):
-    #            print("trying subset ", c)
-    #            patchClass(c)
-
-    #    import sys
-    #    z = list(sys.modules.keys())
-    #    z.sort()
-    #    for x in z:
-    #        print("In sys: ", x)
-
-    print("TKG -- A")
-    if importlib.util.find_spec("apex.mlp") is not None:
-        print("TKG -- importing apex.mlp")
-        import apex.mlp
-        patchClass(apex.mlp)
-
-    print("TKG -- B")
     patch_apex_module("apex.amp")
     patch_apex_module("apex.contrib.groupbn")
     patch_apex_module("apex.contrib.multihead_attn")
@@ -465,40 +425,8 @@ def patch_apex():
     patch_apex_module("apex.multi_tensor_apply")
     patch_apex_module("apex.optimizers")
     patch_apex_module("apex.parallel")
-    #patch_apex_module("apex.reparameterization")
-    #patch_apex_module("apex.RNN")
-    print("TKG -- C")
-
-    # ./__init__.py
-    # ./fp16_utils/__init__.py
-    # ./mlp/__init__.py
-    # ./normalization/__init__.py
-    # ./amp/__init__.py
-    # ./amp/lists/__init__.py
-    # ./multi_tensor_apply/__init__.py
-    # ./optimizers/__init__.py
-    # ./reparameterization/__init__.py
-    # ./contrib/__init__.py
-    # ./contrib/groupbn/__init__.py
-    # ./contrib/optimizers/__init__.py
-    # ./contrib/sparsity/__init__.py
-    # ./contrib/xentropy/__init__.py
-    # ./contrib/multihead_attn/__init__.py
-    # ./RNN/__init__.py
-    # ./pyprof/__init__.py
-    # ./pyprof/prof/__init__.py
-    # ./pyprof/parse/__init__.py
-    # ./pyprof/nvtx/__init__.py
-    # ./parallel/__init__.py
-
-    #    if importlib.util.find_spec("XXX") is not None:
-    #        print("TKG -- importing XXX")
-    #        import XXX
-    #        patchClass(XXX)
-
-    #    patch_module(apex)
-
-    #exit(1)
+    #patch_apex_module("apex.reparameterization") # FIXME
+    #patch_apex_module("apex.RNN") # FIXME
 
 
 def is_same_module_or_submodule(orig, incoming):
@@ -512,54 +440,18 @@ def is_same_module_or_submodule(orig, incoming):
 
 
 def patch_apex_module(modstr):
-    import importlib
-    print("PATCHING MODULE", modstr)
     if importlib.util.find_spec(modstr) is not None:
         mod = importlib.import_module(modstr)
 
         for n, v in ins.getmembers(mod):
             if is_same_module_or_submodule(mod, ins.getmodule(v)):
                 if (ins.isclass(v)):
-                    print("    PATCHING CLASS", n)
                     for key in v.__dict__:
                         if (ins.isfunction(v.__dict__[key])):
                             # FIXME SHOULD I ONLY BE DOING FORWARD??
-                            print("        PATCHING FUNCTION", key, "IN CLASS", n)
                             add_wrapper(v, key)
                 if (ins.isfunction(v)):
-                    print("    PATCHING FLOATING FUNCTION", n)
                     add_wrapper(mod, n)
-
-
-#        for name, val in ins.getmembers(mod, ins.isclass):
-#            print("  TKG -- PATCHING CLASS ", mod.__name__, name)
-#            for key in val.__dict__:
-#                if (ins.isfunction(val.__dict__[key])):
-#                    print("    TKG -- actual function is", key)
-#                    add_wrapper(val, key)
-#
-#        for name, val in ins.getmembers(mod, ins.isfunction):
-#            print("TKG  -- adding wrapper for ", name)
-#            add_wrapper(mod, name)
-
-#def patch_module(mod):
-#    print("TKGZ -- patching", mod)
-#    print("TKGZ -- name is", mod.__name__)
-#
-#    for name, val in ins.getmembers(mod, ins.isclass):
-#        print("  TKG -- PATCHING CLASS ", mod.__name__, name)
-#        #patchClass(val)
-#
-#    # Patch children
-#    for name, val in ins.getmembers(mod, ins.ismodule):
-#        print("TKG -- comparing", val.__name__, "vs", mod.__name__)
-#        if val.__name__.startswith(mod.__name__) and val.__name__ != mod.__name__:
-#            print("TKG -- valid child module", name)
-#            patch_module(val)
-#        else:
-#            print("TKG -- ignoring child module", name)
-#
-#    print("TKG -- finished with ", mod)
 
 
 def push_nvtx_model_config(config):
