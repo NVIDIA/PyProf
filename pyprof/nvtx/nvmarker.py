@@ -142,7 +142,6 @@ def modMarker(mod, fn_name, args):
     """
 	Returns the stringified extra_repr() of a module.
 	"""
-    assert (fn_name == 'forward')
     assert (len(args) > 0)
     d = {}
     d['mod'] = mod.__name__
@@ -385,7 +384,11 @@ def patch_dataloader():
 
 def patch_apex():
     """Monkey-patch functions in APEX"""
+    patch_apex_c()
+    patch_apex_pyt()
 
+
+def patch_apex_c():
     if importlib.util.find_spec("amp_C") is not None:
         import amp_C
         patchClass(amp_C)
@@ -414,6 +417,8 @@ def patch_apex():
         import mlp_cuda
         patchClass(mlp_cuda)
 
+
+def patch_apex_pyt():
     patch_apex_module("apex.amp")
     patch_apex_module("apex.contrib.groupbn")
     patch_apex_module("apex.contrib.multihead_attn")
@@ -426,10 +431,14 @@ def patch_apex():
     patch_apex_module("apex.optimizers")
     patch_apex_module("apex.parallel")
     #patch_apex_module("apex.reparameterization") # FIXME
-    #patch_apex_module("apex.RNN") # FIXME
+    #patch_apex_module("apex.RNN")  # FIXME
 
 
 def is_same_module_or_submodule(orig, incoming):
+    """
+    Returns true if the incoming module is the same module as the original, 
+    or is a submodule of the original module
+    """
     if incoming is None:
         return False
     if orig == incoming:
@@ -440,18 +449,28 @@ def is_same_module_or_submodule(orig, incoming):
 
 
 def patch_apex_module(modstr):
+    """
+    Patch all forward/backward/step functions in classes in the given apex module.
+    """
     if importlib.util.find_spec(modstr) is not None:
         mod = importlib.import_module(modstr)
 
         for n, v in ins.getmembers(mod):
+            # This makes sure we don't patch random other modules that are imported by the target module
+            #
             if is_same_module_or_submodule(mod, ins.getmodule(v)):
                 if (ins.isclass(v)):
-                    for key in v.__dict__:
-                        if (ins.isfunction(v.__dict__[key])):
-                            # FIXME SHOULD I ONLY BE DOING FORWARD??
-                            add_wrapper(v, key)
-                if (ins.isfunction(v)):
-                    add_wrapper(mod, n)
+                    patch_apex_class(v)
+
+
+def patch_apex_class(cls):
+    """
+    Patch all forward/backward/step functions in the given apex class
+    """
+    for f in cls.__dict__:
+        if (ins.isfunction(cls.__dict__[f])):
+            if f in ["forward", "backward", "step"]:
+                add_wrapper(cls, f)
 
 
 def push_nvtx_model_config(config):
