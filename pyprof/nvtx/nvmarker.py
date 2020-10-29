@@ -430,8 +430,7 @@ def patch_apex_pyt():
     patch_apex_module("apex.multi_tensor_apply")
     patch_apex_module("apex.optimizers")
     patch_apex_module("apex.parallel")
-    #patch_apex_module("apex.reparameterization") # FIXME
-    #patch_apex_module("apex.RNN")  # FIXME
+    #patch_apex_module("apex.RNN")  # Confirmed to be dead code. Do not patch
 
 
 def is_same_module_or_submodule(orig, incoming):
