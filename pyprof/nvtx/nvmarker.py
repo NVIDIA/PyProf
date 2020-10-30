@@ -389,6 +389,7 @@ def patch_apex():
 
 
 def patch_apex_c():
+    """Monkey-patch C-implemented functions in APEX"""
     if importlib.util.find_spec("amp_C") is not None:
         import amp_C
         patchClass(amp_C)
@@ -419,6 +420,8 @@ def patch_apex_c():
 
 
 def patch_apex_pyt():
+    """Monkey-patch pytorch-implemented functions in APEX"""
+
     patch_apex_module("apex.amp")
     patch_apex_module("apex.contrib.groupbn")
     patch_apex_module("apex.contrib.multihead_attn")
