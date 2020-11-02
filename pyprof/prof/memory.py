@@ -22,6 +22,10 @@ def readMarker(d):
     return marker['mod'], marker['op'], marker['args']
 
 class OneZero(OperatorLayerBase):
+    """
+    Support for torch.ones, torch.zeros etc.
+    Fill a tensor with ones or zeros.
+    """
 
     ops = ["ones", "ones_like", "zero_", "zeros", "zeros_like"]
 
@@ -56,6 +60,10 @@ class OneZero(OperatorLayerBase):
         return 0
 
 class Fill(OperatorLayerBase):
+    """
+    Support for torch.fill_.
+    Fill a tensor with a specific value.
+    """
 
     def __init__(self, d):
         mod, op, args = readMarker(d)
@@ -88,6 +96,10 @@ class Fill(OperatorLayerBase):
         return 0
 
 class Full(OperatorLayerBase):
+    """
+    Support for torch.full.
+    Create a tensor of specified size and filled with a specified value.
+    """
 
     def __init__(self, d):
         mod, op, args = readMarker(d)
