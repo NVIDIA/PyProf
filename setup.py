@@ -19,7 +19,9 @@ import os
 from setuptools import setup, find_packages
 
 with open('VERSION', 'r') as f:
-    version = f.read()[:-4]
+    version = f.read().strip()
+    if version.endswith("dev"):
+        version = version[:-3]
 
 
 def req_file(filename, folder="requirements"):
