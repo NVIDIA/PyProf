@@ -114,7 +114,7 @@ class TestPyProfFuncStack(unittest.TestCase):
 
         func1()
 
-    # Test that lambdas are ignored in hierarchy
+    # Test that lambdas are NOT ignored in hierarchy
     # Function stack is func1->func2->lambda->func3->verify
     # Local function 'verify' gets recognized as a member of TestPyProfFuncStack because it uses 'self'
     #
@@ -124,7 +124,7 @@ class TestPyProfFuncStack(unittest.TestCase):
             tracemarker = pyprof.nvtx.nvmarker.traceMarker("opname")
             self.compare_funcstack(
                 tracemarker,
-                "TestPyProfFuncStack::test_ignore_lambda/func1/func2/func3/TestPyProfFuncStack::verify/opname"
+                "TestPyProfFuncStack::test_ignore_lambda/func1/func2/<lambda>/func3/TestPyProfFuncStack::verify/opname"
             )
 
         def func3():

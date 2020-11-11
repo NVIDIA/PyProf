@@ -45,8 +45,9 @@ class DLProf(object):
         #    Remove back-to-back duplicates of the same function name.
         #    This is common during recursion
         #
-        if name in ["wrapper_func", "always_benchmark_wrapper"]:
-            return True
+        for prefix in ["wrapper_func", "always_benchmark_wrapper"]:
+            if name.startswith(prefix):
+                return True
         if name == prev_name:
             return True
         return False
