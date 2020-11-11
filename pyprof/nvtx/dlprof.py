@@ -38,26 +38,14 @@ class DLProf(object):
     # Return True if the name in the hierarchy should be skipped
     @classmethod
     def should_skip_frame_name(cls, name, prev_name):
-        # __call__:
-        #    Much of Torch library is implemented in this way. Ignore these extra layers
         # wrapper_func and always_benchmark_warpper:
         #    Are functions in this file. If there are nested monkeypatched functions
         #    we don't want it to show up
-        # <*>:
-        #    Things like <module>, <genexpr>, <lamba> which don't add any information
-        #    and break html
         # name==prev_name:
         #    Remove back-to-back duplicates of the same function name.
-        #    This is common when python calls the inheritence stack
-        #    For example:
-        #      This: ModelAndLoss::forward/ResNet::forward/Sequential::forward/Bottleneck::forward/BatchNorm2d::forward
-        #      Comes to this function as: forward/forward/forward/forward/forward
-        #      Leaves this function as: forward
+        #    This is common during recursion
         #
-        for prefix in ["__call__", "wrapper_func", "always_benchmark_wrapper"]:
-            if name.startswith(prefix):
-                return True
-        if name.startswith("<") and name.endswith(">"):
+        if name in ["wrapper_func", "always_benchmark_wrapper"]:
             return True
         if name == prev_name:
             return True
