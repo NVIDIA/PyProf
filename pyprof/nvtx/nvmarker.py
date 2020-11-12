@@ -43,12 +43,39 @@ import json
 import importlib
 from .config import Config
 from .dlprof import DLProf
+from .dlprof import dprint
 
 # Singleton object tracking dlprof specific information
 dlprof = DLProf()
 # flag to control wrapping ops in nvtx markers
 wrappers_enabled = True
+# List to keep track of callids when there are nested monket patch
+# function calls
+patch_list       = []
 
+def start_graph():
+    """
+    start_graph()
+        This function is exported in __init__.py so the instrumentation code
+        can control which iteration to capture the network graph.
+        Use this in conjunction with config option --delay_graph_capture
+    """
+    global wrappers_enabled
+    wrappers_enabled = True
+    dprint("Starting graph tracker wrappers enabled {}".format(wrappers_enabled))
+    return
+
+def stop_graph():
+    """
+    stop_graph()
+        This function is exported in __init__.py so the instrumentation code can
+        stop the graph capture at the end of a specific iteration.
+        Use this in conjunction with config option --delay_graph_capture
+    """
+    global wrappers_enabled
+    wrappers_enabled = False
+    dprint("Stopping graph tracker wrappers enabled {}".format(wrappers_enabled))
+    return
 
 def isfunc(mod, f):
     assert hasattr(mod, f)
@@ -166,13 +193,21 @@ def add_wrapper(mod, fn_name):
     def wrapper_func(*args, **kwargs):
 
         global wrappers_enabled
+        global patch_list
         traceMarker_str = ""
         input_callid_list = []
 
-        if config.capture_input_ops:
-            dlprof.capture_inputs(input_callid_list, *args)
 
         if wrappers_enabled:
+
+            if config.capture_input_ops:
+                ## Stack for callids to work with nested monkey patch function calls
+                patch_list.append(dlprof.call_id)
+                dprint("-----Calling patched function {} call_id {} from class {} len args {} len kwargs {}"\
+                    .format(fn_name, dlprof.call_id, mod, len(args), len(kwargs)))
+                dlprof.capture_inputs(dlprof.call_id, input_callid_list, *args)
+
+
             # Push trace marker
             traceMarker_str = traceMarker(fn_name)
             nvtx.range_push(traceMarker_str)
@@ -188,7 +223,12 @@ def add_wrapper(mod, fn_name):
             # ends up executing another wrapped function
             wrappers_enabled = False
             if config.capture_input_ops:
-                cadena = argMarker(mod, fn_name, args, kwargs, dlprof.call_id, input_callid_list)
+                saved_call_id = dlprof.call_id
+                # Keeps call_id correct when there are nested
+                # monkey patch functions
+                if dlprof.call_id != patch_list[0]:
+                    saved_call_id = patch_list[0]
+                cadena = argMarker(mod, fn_name, args, kwargs, saved_call_id, input_callid_list)
             else:
                 cadena = argMarker(mod, fn_name, args, kwargs)
             nvtx.range_push(cadena)
@@ -208,15 +248,25 @@ def add_wrapper(mod, fn_name):
             # Pop trace marker
             nvtx.range_pop()
 
-        if config.capture_input_ops:
-            dlprof.capture_outputs(dlprof.call_id, result)
-            # Store the callid -> op_name mapping
-            if traceMarker_str is not "":
-                traceMarker_str = traceMarker_str.replace("\'", "\"")
-                traceMarker_dict = json.loads(traceMarker_str)
-                dlprof.call_id_to_op_map[dlprof.call_id] = traceMarker_dict['funcStack']
-            dlprof.call_id = dlprof.call_id + 1
+            if config.capture_input_ops:
+                # Keeps call_id correct when there are nested
+                # monkey patch functions
+                saved_call_id = dlprof.call_id
+                if dlprof.call_id != patch_list[0]:
+                    saved_call_id = patch_list[0]
+                dlprof.capture_outputs(saved_call_id, result)
+                # Store the callid -> op_name mapping
+                if traceMarker_str is not "":
+                    traceMarker_str = traceMarker_str.replace("\'", "\"")
+                    traceMarker_dict = json.loads(traceMarker_str)
+                    dlprof.call_id_to_op_map[saved_call_id] = traceMarker_dict['funcStack']
+                dprint("Fn {} Incrementing call_id from {} to {}".format(fn_name, dlprof.call_id, dlprof.call_id + 1))
 
+                starting_call_id = patch_list[0]
+                last_call_id     = patch_list.pop()
+                dprint("Ending:callid: {} orig callid {} last_callid {} "\
+                        .format(dlprof.call_id, starting_call_id, last_call_id))
+                dlprof.call_id = dlprof.call_id + 1
         return result
 
     setattr(mod, fn_name, wrapper_func)
@@ -628,8 +678,14 @@ def init(*args, **kwargs):
         capture_input_ops (bool): When true, input tensor names will be added 
             to NVTX markers and enable_function_stack is set to True.
     """
+    global wrappers_enabled
 
-    Config(*args, **kwargs)
+    config = Config(*args, **kwargs)
+
+    if config.delay_graph_capture:
+        ## Disable wrappers_enabled at init when user wants to control
+        ## which iteration to begin graph capture
+        wrappers_enabled = False
 
     print("Initializing NVTX monkey patches")
 

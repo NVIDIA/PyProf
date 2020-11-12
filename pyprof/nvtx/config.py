@@ -26,4 +26,5 @@ class Config(object):
             cls.func_stack_enabled = kwargs.get("enable_function_stack",
                                                 False) or kwargs.get("capture_input_ops", False)
             cls.capture_input_ops = kwargs.get("capture_input_ops", False)
+            cls.delay_graph_capture = kwargs.get("delay_graph_capture", False)
         return cls._instance
