@@ -94,7 +94,7 @@ class TestPyprofWithLenet(unittest.TestCase):
             # verify final id is in the range
             # Which kernel cuDNN uses is nondeterministic.
             # While the exact number of kernels is not clear, for this network, it should be [60, 70]
-            self.assertTrue(int(row['Idx']) in range(60, 71), f"Final Idx: {row['Idx']}")
+            self.assertTrue(int(row['Idx']) in range(65, 75), f"Final Idx: {row['Idx']}")
 
 
 if __name__ == '__main__':
