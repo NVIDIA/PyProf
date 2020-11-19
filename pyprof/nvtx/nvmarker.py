@@ -49,9 +49,6 @@ from .dlprof import dprint
 dlprof = DLProf()
 # flag to control wrapping ops in nvtx markers
 wrappers_enabled = True
-# List to keep track of callids when there are nested monket patch
-# function calls
-patch_list       = []
 
 def start_graph():
     """
@@ -62,7 +59,7 @@ def start_graph():
     """
     global wrappers_enabled
     wrappers_enabled = True
-    dprint("Starting graph tracker wrappers enabled {}".format(wrappers_enabled))
+    dprint(f"Starting graph tracker wrappers enabled {wrappers_enabled}")
     return
 
 def stop_graph():
@@ -74,7 +71,7 @@ def stop_graph():
     """
     global wrappers_enabled
     wrappers_enabled = False
-    dprint("Stopping graph tracker wrappers enabled {}".format(wrappers_enabled))
+    dprint(f"Stopping graph tracker wrappers enabled {wrappers_enabled}")
     return
 
 def isfunc(mod, f):
@@ -193,7 +190,6 @@ def add_wrapper(mod, fn_name):
     def wrapper_func(*args, **kwargs):
 
         global wrappers_enabled
-        global patch_list
         traceMarker_str = ""
         input_callid_list = []
 
@@ -202,9 +198,9 @@ def add_wrapper(mod, fn_name):
 
             if config.capture_input_ops:
                 ## Stack for callids to work with nested monkey patch function calls
-                patch_list.append(dlprof.call_id)
-                dprint("-----Calling patched function {} call_id {} from class {} len args {} len kwargs {}"\
-                    .format(fn_name, dlprof.call_id, mod, len(args), len(kwargs)))
+                dlprof.patch_list.append(dlprof.call_id)
+                dprint(f"-----Calling patched function {fn_name} call_id {dlprof.call_id} from"\
+                        f" class {mod} len args {len(args)} len kwargs {len(kwargs)}")
                 dlprof.capture_inputs(dlprof.call_id, input_callid_list, *args)
 
 
@@ -226,8 +222,8 @@ def add_wrapper(mod, fn_name):
                 saved_call_id = dlprof.call_id
                 # Keeps call_id correct when there are nested
                 # monkey patch functions
-                if dlprof.call_id != patch_list[0]:
-                    saved_call_id = patch_list[0]
+                if dlprof.call_id != dlprof.patch_list[0]:
+                    saved_call_id = dlprof.patch_list[0]
                 cadena = argMarker(mod, fn_name, args, kwargs, saved_call_id, input_callid_list)
             else:
                 cadena = argMarker(mod, fn_name, args, kwargs)
@@ -252,20 +248,21 @@ def add_wrapper(mod, fn_name):
                 # Keeps call_id correct when there are nested
                 # monkey patch functions
                 saved_call_id = dlprof.call_id
-                if dlprof.call_id != patch_list[0]:
-                    saved_call_id = patch_list[0]
+                if dlprof.call_id != dlprof.patch_list[0]:
+                    saved_call_id = dlprof.patch_list[0]
                 dlprof.capture_outputs(saved_call_id, result)
                 # Store the callid -> op_name mapping
                 if traceMarker_str is not "":
                     traceMarker_str = traceMarker_str.replace("\'", "\"")
                     traceMarker_dict = json.loads(traceMarker_str)
                     dlprof.call_id_to_op_map[saved_call_id] = traceMarker_dict['funcStack']
-                dprint("Fn {} Incrementing call_id from {} to {}".format(fn_name, dlprof.call_id, dlprof.call_id + 1))
+                dprint(f"Fn {fn_name} Incrementing call_id from {dlprof.call_id} to"\
+                        f" {dlprof.call_id + 1}")
 
-                starting_call_id = patch_list[0]
-                last_call_id     = patch_list.pop()
-                dprint("Ending:callid: {} orig callid {} last_callid {} "\
-                        .format(dlprof.call_id, starting_call_id, last_call_id))
+                starting_call_id = dlprof.patch_list[0]
+                last_call_id     = dlprof.patch_list.pop()
+                dprint(f"Ending:callid: {dlprof.call_id} orig callid {starting_call_id} last_callid"\
+                        f" {last_call_id}")
                 dlprof.call_id = dlprof.call_id + 1
         return result
 
