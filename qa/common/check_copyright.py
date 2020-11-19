@@ -29,7 +29,10 @@ SKIP_PATHS = ('requirements.txt',
               'qa/L0_docs/VERSION',
               'LICENSE',
               'VERSION',
-              'MANIFEST.in')
+              'MANIFEST.in',
+              'build/',
+              'dist/',
+              'nvidia_pyprof.egg-info/')
 
 COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9]),'
 COPYRIGHT_YEAR_RE1 = 'Copyright \\(c\\) (20[0-9][0-9])-(20[0-9][0-9]),'
