@@ -17,7 +17,7 @@ TEST_LOG="./nvtx.log"
 
 
 apt-get update && \
-    apt-get install -y --no-install-recommends python
+    apt-get install -y --no-install-recommends python3
 
 rm -f $TEST_LOG
 RET=0

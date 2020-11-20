@@ -468,19 +468,19 @@ def patch_apex_c():
 
 def patch_apex_pyt():
     """Monkey-patch pytorch-implemented functions in APEX"""
-
-    patch_apex_module("apex.amp")
-    patch_apex_module("apex.contrib.groupbn")
-    patch_apex_module("apex.contrib.multihead_attn")
-    patch_apex_module("apex.contrib.optimizers")
-    patch_apex_module("apex.contrib.sparsity")
-    patch_apex_module("apex.contrib.xentropy")
-    patch_apex_module("apex.fp16_utils")
-    patch_apex_module("apex.mlp")
-    patch_apex_module("apex.multi_tensor_apply")
-    patch_apex_module("apex.optimizers")
-    patch_apex_module("apex.parallel")
-    #patch_apex_module("apex.RNN")  # Confirmed to be dead code. Do not patch
+    if importlib.util.find_spec("apex") is not None:
+        patch_apex_module("apex.amp")
+        patch_apex_module("apex.contrib.groupbn")
+        patch_apex_module("apex.contrib.multihead_attn")
+        patch_apex_module("apex.contrib.optimizers")
+        patch_apex_module("apex.contrib.sparsity")
+        patch_apex_module("apex.contrib.xentropy")
+        patch_apex_module("apex.fp16_utils")
+        patch_apex_module("apex.mlp")
+        patch_apex_module("apex.multi_tensor_apply")
+        patch_apex_module("apex.optimizers")
+        patch_apex_module("apex.parallel")
+        #patch_apex_module("apex.RNN")  # Confirmed to be dead code. Do not patch
 
 
 def is_same_module_or_submodule(orig, incoming):
