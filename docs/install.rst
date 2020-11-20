@@ -48,6 +48,6 @@ the most recent version of CUDA, Docker, and nvidia-docker.
 After performing the above setup, you can pull the PyProf container
 using the following command::
 
-  docker pull nvcr.io/nvidia/pytorch:20.07-py3
+  docker pull nvcr.io/nvidia/pytorch:20.11-py3
 
-Replace *20.07* with the version of PyTorch container that you want to pull.
+Replace *20.11* with the version of PyTorch container that you want to pull.
