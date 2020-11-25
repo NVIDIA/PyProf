@@ -27,5 +27,5 @@ class Config(object):
                                                 False) or kwargs.get("capture_input_ops", False)
             cls.capture_input_ops = kwargs.get("capture_input_ops", False)
             cls.delay_graph_capture = kwargs.get("delay_graph_capture", False)
-            cls.debug_en            = kwargs.get("debug_en", False)
+            cls.debug_graph         = kwargs.get("debug_graph", False)
         return cls._instance
