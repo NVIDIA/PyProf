@@ -199,8 +199,6 @@ def add_wrapper(mod, fn_name):
             if config.capture_input_ops:
                 ## Stack for callids to work with nested monkey patch function calls
                 dlprof.patch_list.append(dlprof.call_id)
-                dprint(f"-----Calling patched function {fn_name} call_id {dlprof.call_id} from"\
-                        f" class {mod} len args {len(args)} len kwargs {len(kwargs)}")
                 dlprof.capture_inputs(dlprof.call_id, input_callid_list, *args)
 
 
@@ -256,13 +254,9 @@ def add_wrapper(mod, fn_name):
                     traceMarker_str = traceMarker_str.replace("\'", "\"")
                     traceMarker_dict = json.loads(traceMarker_str)
                     dlprof.call_id_to_op_map[saved_call_id] = traceMarker_dict['funcStack']
-                dprint(f"Fn {fn_name} Incrementing call_id from {dlprof.call_id} to"\
-                        f" {dlprof.call_id + 1}")
 
                 starting_call_id = dlprof.patch_list[0]
                 last_call_id     = dlprof.patch_list.pop()
-                dprint(f"Ending:callid: {dlprof.call_id} orig callid {starting_call_id} last_callid"\
-                        f" {last_call_id}")
                 dlprof.call_id = dlprof.call_id + 1
         return result
 
