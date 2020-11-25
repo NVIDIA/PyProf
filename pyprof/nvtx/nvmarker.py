@@ -370,11 +370,7 @@ def patchClass(cls):
 
 def patch_torch_classes():
     """Monkey-patch all classes in torch"""
-    for cls in [
-            torch,
-            torch.Tensor,
-            torch.nn.functional,
-    ]:
+    for cls in [torch, torch.Tensor, torch.nn.functional, torch.distributed]:
         patchClass(cls)
 
 
