@@ -132,7 +132,11 @@ class Bmm(OperatorLayerBase):
         assert (k1 == k2)
         t1 = A['dtype']
         t2 = B['dtype']
-        assert (t1 == t2)
+        # assert (t1 == t2).  No longer true.
+        if t1 != t2:
+            if t1 == 'float16' or t2 == 'float16' :
+                A['dtype'] = 'float16'
+                B['dtype'] = 'float16'
 
         self.A = A
         self.B = B
