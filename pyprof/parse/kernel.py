@@ -85,6 +85,9 @@ class Kernel(object):
         self.altSeqId = []
         self.layer = []
 
+        self.callid = []         ## Input node tracking
+        self.input_callids = []  ## Input node tracking
+
         self.subSeqId = None
         self.dir = None
         self.mod = []
@@ -121,7 +124,8 @@ class Kernel(object):
         self.tid = info['tid']
         self.objId = info['objId']
         assert (self.rStartTime < self.rEndTime)
-        assert (self.rStartTime < self.kStartTime)
+        if self.kStartTime:
+            assert (self.rStartTime < self.kStartTime)
 
     def setMarkerInfo(self, info):
         self.layerMarkers, self.traceMarkers, self.reprMarkers, self.pyprofMarkers, self.seqMarkers, self.otherMarkers, self.altMarkers, self.seqId, self.altSeqId, self.layer = info
@@ -166,27 +170,33 @@ class Kernel(object):
             t = eval(m)
             self.op.append(t['op'])
             self.mod.append(t['mod'])
+            ## Begin Input node tracking
+            if t['callid'] not in self.callid:
+                self.callid.append(t['callid'])
+            in_callids = t['input_callids']
+            for item in in_callids:
+                if item not in self.input_callids:
+                    self.input_callids.append(item)
+            ## End Input node tracking
+
 
         if len(self.op):
             return
 
         #Check bprop kernel markers
         for m in self.seqMarkers:
-            if ("backward, seq = " in m) or ("Backward, seq = " in m):
-                op = m.split(",")[0]
-                op = sanitize(op)
-                self.op.append(op)
-                self.mod.append('na')
-
-        if len(self.op):
-            return
-
-        #Check markers with "seq = "
-        for m in self.seqMarkers:
             if ", seq = " in m:
                 op = m.split(",")[0]
+                if ("backward, seq = " in m) or ("Backward, seq = " in m):
+                    op = sanitize(op)
                 self.op.append(op)
                 self.mod.append('na')
+                ## Begin Input node tracking
+                if 'na' not in self.callid:
+                    self.callid.append('na')
+                self.input_callids.append('na')
+                ## End Input node tracking
+
 
         if len(self.op):
             return
@@ -195,6 +205,11 @@ class Kernel(object):
         if len(self.otherMarkers):
             self.op.append(self.otherMarkers[0])
         self.mod.append('na')
+        ## Begin Input node tracking
+        if 'na' not in self.callid:
+            self.callid.append('na')
+        self.input_callids.append('na')
+        ## End Input node tracking
 
     def print(self):
         """
@@ -210,6 +225,9 @@ class Kernel(object):
         a.reprMarkers = self.reprMarkers
         a.marker = self.pyprofMarkers
         a.seqMarker = self.seqMarkers
+
+        a.callid = self.callid                 # Input node tracking
+        a.input_callids = self.input_callids   # Input node tracking
 
         a.seqId = self.seqId
         a.subSeqId = self.subSeqId

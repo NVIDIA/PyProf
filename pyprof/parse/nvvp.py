@@ -111,6 +111,29 @@ class NVVP(object):
         result = self.db.select(cmd)
         return result
 
+    ## Begin Input node tracking
+    def getAllMarkers(self):
+        '''
+        getAllMarkers()
+        '''
+        callid_markers = {}
+        cmd = "SELECT  id,name from marker ORDER BY startTime ASC"
+        result = self.db.select(cmd)
+        for row in result:
+            marker = self.getString(row['name'])
+            if 'callid' in marker and 'input_callid' in marker:
+                ## Add to a dictionary indexed by callid
+                #print("Found Marker {}".format(marker))
+                item = eval(marker)
+                assert isinstance(item, dict), "Error - marker item {} not a dictionary".format(item)
+                callid = item['callid']
+                if callid not in callid_markers:
+                    callid_markers[callid] = []
+                callid_markers[callid].append(marker)
+
+        return callid_markers
+    ## End Input node tracking
+
     def getMarkerInfo(self, objId, startTime, endTime):
         """
 		This function first finds all NVTX markers encapsulating

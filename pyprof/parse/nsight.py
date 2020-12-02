@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import sys
+import re
 
 
 class Nsight(object):
@@ -89,6 +90,29 @@ class Nsight(object):
         ).format(self.kernelT, self.stringT, self.runtimeT)
         result = self.db.select(cmd)
         return result
+
+    ## Begin Input node tracking
+    def getAllMarkers(self):
+        '''
+        getAllMarkers()
+        '''
+        callid_markers = {}
+        cmd = "SELECT  globalTid,text from marker ORDER BY start ASC"
+        result = self.db.select(cmd)
+        for row in result:
+            marker = row['text']
+            if 'callid' in marker and 'input_callid' in marker:
+                ## Add to a dictionary indexed by callid
+                #print("Found Marker {}".format(marker))
+                item = eval(marker)
+                assert isinstance(item, dict), "Error - marker item {} not a dictionary".format(item)
+                callid = item['callid']
+                if callid not in callid_markers:
+                    callid_markers[callid] = []
+                callid_markers[callid].append(marker)
+
+        return callid_markers
+    ## End Input node tracking
 
     def getMarkerInfo(self, objId, startTime, endTime):
         """
@@ -224,7 +248,7 @@ class Nsight(object):
             if m.find("CheckpointFunctionBackward") >= 0:
                 continue
 
-            if ("_backward, seq =" in m) or ("Backward, seq =" in m) or ("Backward0, seq =" in m):
+            if re.search(r"_backward, seq =|Backward[0-9]*, seq=", m):
                 bprop = True
 
             if ("mod" in m) and ("op" in m) and ("args" in m) and ("type" in m):

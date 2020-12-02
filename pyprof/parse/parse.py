@@ -67,6 +67,10 @@ def main():
 
     nvvp.createMarkerTable()
 
+    ## Scan the remaining markers to find ops that didn't use any GPU time
+    ## eg tensor.view()
+    markers = nvvp.getAllMarkers()
+
     prevSeqId = -1
     prevSubSeqId = -1
     prevOp = "na"
@@ -140,6 +144,34 @@ def main():
                 (k.altSeqId).sort()
 
         k.print()
+
+        # Begin Input node tracking
+        for callid in k.callid:
+            if callid in markers:
+                markers.pop(callid)
+        # End Input node tracking
+
+    # Begin Input node tracking
+    ## Find callids that do not have kernels associated with them
+    ## For each callid - create a fake kernel that only has the
+    ## marker info populated
+    for marker in markers:
+        #print("{}".format(markers[marker]))
+        k = Kernel()
+        marker_info = ([], [], [] , markers[marker], [], [], [], [], [], [])
+        #print("Setting marker info {}".format(marker_info))
+        k.setMarkerInfo(marker_info)
+        k.setDirection()
+        k.setOp()
+        k.setKernelName('cpu_kernel')
+        ## Fake the runtime stats end - start = 0
+        info = {'rStart': 1, 'rEnd': 2, 'pid': 0, 'tid': 0, 'objId': 0}
+        k.setRunTimeInfo(info)
+        k.kDuration = 0
+
+        k.print()
+    # End Input node tracking
+
 
     db.close()
 
