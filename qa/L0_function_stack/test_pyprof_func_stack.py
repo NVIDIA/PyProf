@@ -40,7 +40,7 @@ class TestPyProfFuncStack(unittest.TestCase):
         pass
 
     def compare_funcstack(self, actual_tracemarker, expected_str):
-        # Given a funcstack string, remove TestPyProfFuncStack::__call__/run and everything above it
+        # Given a funcstack string, remove TestPyProfFuncStack::__callTestMethod and everything above it
         #
         def remove_test_class_hierarchy(x):
             separator = "/"
