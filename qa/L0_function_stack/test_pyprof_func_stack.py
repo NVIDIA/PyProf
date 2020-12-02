@@ -49,7 +49,7 @@ class TestPyProfFuncStack(unittest.TestCase):
             # Find the LAST instance of run in the split
             #
             for i, n in enumerate(fn_split):
-                if (n == "TestPyProfFuncStack::run"):
+                if (n == "TestPyProfFuncStack::_callTestMethod"):
                     split = i + 1
 
             fn_split = fn_split[split:]
