@@ -109,8 +109,11 @@ class Pointwise(OperatorLayerBase):
 
         # Filter out all named parameters (kwargs).
         # This might require revisiting in future.
-        ## Don't want to filter out named parameters, these are needed for
-        ## determining the input tensor shapes
+        ## Don't filter the args, just request them in order
+        ## *args are always before **kwargs
+        ## The 'name' field is being used to specify the unique name
+        ## of the input node
+        self.unfiltered_args = args
 
         # Filter out non tensors
         #args = list(filter(lambda x: x['type'] == "tensor", args))
@@ -146,13 +149,13 @@ class Pointwise(OperatorLayerBase):
 
         # Unary
         if self.op() in Pointwise.unary + Pointwise.representation:
-            assert (len(self.input) == 1)
+            assert (len(self.input) >= 1)
             b = 2 * self.input[0].bytes
             f = self.input[0].size
 
         elif self.op() in Pointwise.exp_log + Pointwise.trig_trans + \
                 Pointwise.sqrt + Pointwise.error:
-            assert (len(self.input) == 1)
+            assert (len(self.input) >= 1)
             b = 2 * self.input[0].bytes
             f = self.input[0].size * 20 # estimate
 
@@ -161,11 +164,12 @@ class Pointwise(OperatorLayerBase):
                 Pointwise.binary + Pointwise.ibinary + \
                 Pointwise.logical + Pointwise.ilogical:
 
-            assert (len(self.input) == 2)
-            out = Tensor.broadcast(self.input)
+            assert (len(self.input) >= 2), "Op {} inputs {} unfiltered args {}"\
+                    .format(self.op(), self.input, self.unfiltered_args)
+            out = Tensor.broadcast(self.input[0:2])
 
             if self.dir == "fprop":
-                b = reduce(operator.add, [t.bytes for t in self.input])
+                b = reduce(operator.add, [t.bytes for t in self.input[0:2]])
                 # The output of comparison is bool
                 if self.op() in Pointwise.comp:
                     out = Tensor(out.shape, "bool")
@@ -183,9 +187,9 @@ class Pointwise(OperatorLayerBase):
                     assert False, e
 
         elif self.op() in Pointwise.power:
-            assert (len(self.input) == 2)
-            out = Tensor.broadcast(self.input)
-            b = reduce(operator.add, [t.bytes for t in self.input])
+            assert (len(self.input) >= 2)
+            out = Tensor.broadcast(self.input[0:2])
+            b = reduce(operator.add, [t.bytes for t in self.input[0:2]])
             b += out.bytes
             f = out.size * 20 # estimate
 

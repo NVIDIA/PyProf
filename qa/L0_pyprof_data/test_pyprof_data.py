@@ -50,6 +50,8 @@ class TestPyProfData(unittest.TestCase):
                         "{'mod': 'Tensor', 'op': 'float', 'args': [{'name': '', 'type': 'tensor', 'shape': (18, 104, 160), 'dtype': 'bool'}]}"
                     ],
                 'seqMarker': ['to, seq = 60471'],
+                'callid': [10],
+                'input_callids': ['3'],
                 'seqId': [60471],
                 'subSeqId':
                     0,
@@ -82,6 +84,8 @@ class TestPyProfData(unittest.TestCase):
                         "{'mod': 'Tensor', 'op': 'clone', 'args': [{'name': '', 'type': 'tensor', 'shape': (18, 4, 416, 640), 'dtype': 'float32'}]}"
                     ],
                 'seqMarker': ['clone, seq = 60161'],
+                'callid': [15],
+                'input_callids': ['4'],
                 'seqId': [60161],
                 'subSeqId':
                     0,

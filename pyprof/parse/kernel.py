@@ -171,12 +171,13 @@ class Kernel(object):
             self.op.append(t['op'])
             self.mod.append(t['mod'])
             ## Begin Input node tracking
-            if t['callid'] not in self.callid:
-                self.callid.append(t['callid'])
-            in_callids = t['input_callids']
-            for item in in_callids:
-                if item not in self.input_callids:
-                    self.input_callids.append(item)
+            if 'callid' in t:
+                if t['callid'] not in self.callid:
+                    self.callid.append(t['callid'])
+                in_callids = t['input_callids']
+                for item in in_callids:
+                    if item not in self.input_callids:
+                        self.input_callids.append(item)
             ## End Input node tracking
 
 
