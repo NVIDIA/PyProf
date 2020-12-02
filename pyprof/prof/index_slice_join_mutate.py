@@ -139,11 +139,7 @@ class Gather(OperatorLayerBase):
         args = list(filter(lambda x: x['name'] != 'out', args))
         assert (len(args) == 3)
 
-        #Get input
-        if (args[0]['name'] == ""):
-            arg = args[0]
-        else:
-            arg = list(filter(lambda x: x['name'] == "input", args))[0]
+        arg = args[0]
 
         assert (arg['type'] == "tensor")
 

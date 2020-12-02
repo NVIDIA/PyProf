@@ -109,7 +109,8 @@ class Pointwise(OperatorLayerBase):
 
         # Filter out all named parameters (kwargs).
         # This might require revisiting in future.
-        args = list(filter(lambda x: x['name'] == "", args))
+        ## Don't want to filter out named parameters, these are needed for
+        ## determining the input tensor shapes
 
         # Filter out non tensors
         #args = list(filter(lambda x: x['type'] == "tensor", args))

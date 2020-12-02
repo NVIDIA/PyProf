@@ -129,7 +129,7 @@ class Clone(OperatorLayerBase):
         self.op_ = op
         self.args = args
 
-        assert (mod == "Tensor")
+        assert (mod == "Tensor" or mod == 'torch'), "Mod {} marker {}".format(mod, marker)
         assert (op == "clone")
         assert (len(args) == 1)
         t = args[0]

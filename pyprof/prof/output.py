@@ -29,6 +29,8 @@ class Output():
         "idx": ["Idx", "index", int, 7],
         "seq": ["SeqId", "seqId", str, 7],
         "altseq": ["AltSeqId", "altSeqId", str, 7],
+        "callid":   ["callid",      "callid",   str,    7],    ## Input node tracking
+        "input_callids":    ["input_callids",       "input_callids",    str,    7], ## Input node tracking
         "tid": ["TId", "tid", int, 12],
         "layer": ["Layer", "layer", str, 10],
         "trace": ["Trace", "trace", str, 25],
@@ -37,6 +39,7 @@ class Output():
         "mod": ["Module", "mod", str, 15],
         "op": ["Op", "op", str, 15],
         "kernel": ["Kernel", "name", str, 0],
+        "kernel_lname": ["KernelLName",     "lName",    str,    0],
         "params": ["Params", "params", str, 0],
         "sil": ["Sil(ns)", "sil", int, 10],
         "tc": ["TC", "tc", str, 2],
@@ -56,7 +59,7 @@ class Output():
 
         w = 0
         for col in self.cols:
-            assert col in Output.table.keys()
+            assert col in Output.table.keys(), "col {} not in table".format(col)
             w += Output.table[col][3]
 
         if ((self.col) and (w > self.width)):

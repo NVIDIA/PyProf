@@ -26,8 +26,9 @@ def parseArgs():
 
     def check_cols(value):
         valid = [
-            "idx", "seq", "altseq", "tid", "layer", "trace", "dir", "sub", "mod", "op", "kernel", "params", "sil", "tc",
-            "device", "stream", "grid", "block", "flops", "bytes"
+            "idx", "seq", "altseq", "tid", "layer", "trace", "dir", "sub", "mod", "op", "kernel",\
+            "kernel_lname", "params", "sil", "tc",\
+            "device", "stream", "grid", "block", "flops", "bytes", "callid", "input_callids"\
         ]
         cols = value.split(",")
         for col in cols:

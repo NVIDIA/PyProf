@@ -47,6 +47,9 @@ class Data(object):
         self.seqId = kernel['seqId']
         self.altSeqId = kernel['altSeqId']
 
+        self.callid = kernel['callid']               ## Input Node tracking
+        self.input_callids = kernel['input_callids'] ## Input Node tracking
+
         self.dir = kernel['dir']
         self.sub = kernel['subSeqId']
 

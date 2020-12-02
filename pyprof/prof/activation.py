@@ -42,14 +42,23 @@ class Activation(OperatorLayerBase):
         assert (mod in ["torch.nn.functional", "torch", "Tensor"])
 
         #Filter out named parameters
-        args = list(filter(lambda x: x['name'] == '', args))
 
-        assert (len(args) >= 1)
+        assert (len(args) >= 1), "Activation {} failed - marker {} args {}".format(d, marker, args)
         arg = args[0]
         assert (arg['type'] == "tensor")
 
         self.input = Tensor(arg['shape'], arg['dtype'])
         self.dir = d.dir
+
+    @staticmethod
+    def arg_filter(arg):
+        ret_val = False
+        if arg['name'] == "":
+            ret_val =  True
+
+        raise Exception("Called arg_filter arg {} rev vat {}".format(arg, ret_val))
+        print("Arg filter for {} ret_val {}".format(arg, ret_val))
+        return ret_val
 
     def params(self):
         return str(self.input)

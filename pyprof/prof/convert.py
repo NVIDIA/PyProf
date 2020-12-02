@@ -36,7 +36,7 @@ class Convert(OperatorLayerBase):
 
         assert (mod == "Tensor")
         assert (op in Convert.ops)
-        assert (len(args) == 1)
+        assert (len(args) >= 1), "Args {} Len {}".format(args, len(args))
 
         t = args[0]
         if t['type'] == "tensor":

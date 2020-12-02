@@ -35,9 +35,6 @@ class Mean(OperatorLayerBase):
         assert (mod in ["torch", "Tensor"])
         assert (op == "mean")
 
-        #Filter out named parameters
-        args = list(filter(lambda x: x['name'] == '', args))
-
         assert (len(args) <= 2)
         i = args[0]
 
@@ -93,11 +90,7 @@ class Sum(OperatorLayerBase):
         assert (op == "sum")
         assert (len(args) >= 1)
 
-        #Get input
-        if (args[0]['name'] == ""):
-            i = args[0]
-        else:
-            i = list(filter(lambda x: x['name'] == "input", args))[0]
+        i = args[0]
 
         self.shape = i['shape']
         self.type = i['dtype']

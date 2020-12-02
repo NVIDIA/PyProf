@@ -220,6 +220,10 @@ def main():
         mod = k['mod']
         op = k['op']
 
+        callid = k['callid']                ## Input node tracking
+        input_callids = k['input_callids']  ## Input node tracking
+
+
         flops = 0
         params = {"na": "na"}
         tc = "na"
@@ -243,6 +247,9 @@ def main():
                     d.modMarker = kernels[index]['reprMarkers']
                     mod = kernels[index]['mod']
                     op = kernels[index]['op']
+
+                    callid = kernels[index]['callid']                ## Input node tracking
+                    input_callids = kernels[index]['input_callids']  ## Input node tracking
 
                     d.layer = kernels[index]['layer']
                     d.trace = kernels[index]['trace']
@@ -279,6 +286,8 @@ def main():
         d.bytes = bytes
         d.mod = mod
         d.op = op
+        d.callid = callid               ## Input node tracking
+        d.input_callids = input_callids ## Input node tracking
 
         output.data(d)
 

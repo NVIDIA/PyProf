@@ -86,16 +86,11 @@ class LogSoftmax(OperatorLayerBase):
         assert (mod in ["torch", "torch.nn.functional"])
         assert (op == "log_softmax")
 
-        #Filter out named parameters
-        args = list(filter(lambda x: x['name'] == '', args))
 
         assert (len(args) <= 2)
 
         #Get input
-        if (args[0]['name'] == ""):
-            i = args[0]
-        else:
-            i = list(filter(lambda x: x['name'] == "input", args))[0]
+        i = args[0]
 
         self.input = Tensor(i['shape'], i['dtype'])
         self.dir = d.dir
