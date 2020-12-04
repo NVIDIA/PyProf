@@ -45,7 +45,7 @@ version_long = u'0.0.0'
 with open("../VERSION") as f:
     version_long = f.readline()
 
-version_short = re.match('^[\d]+\.[\d]+', version_long).group(0)
+version_short = re.match(r'^[\d]+\.[\d]+', version_long).group(0)
 
 git_sha = os.getenv("GIT_SHA")
 
