@@ -250,7 +250,7 @@ def add_wrapper(mod, fn_name):
                     saved_call_id = dlprof.patch_list[0]
                 dlprof.capture_outputs(saved_call_id, result)
                 # Store the callid -> op_name mapping
-                if traceMarker_str is not "":
+                if traceMarker_str != "":
                     traceMarker_str = traceMarker_str.replace("\'", "\"")
                     traceMarker_dict = json.loads(traceMarker_str)
                     dlprof.call_id_to_op_map[saved_call_id] = traceMarker_dict['funcStack']
