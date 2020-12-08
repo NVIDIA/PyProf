@@ -50,6 +50,7 @@ dlprof = DLProf()
 # flag to control wrapping ops in nvtx markers
 wrappers_enabled = True
 
+
 def start_graph():
     """
     start_graph()
@@ -62,6 +63,7 @@ def start_graph():
     dprint(f"Starting graph tracker wrappers enabled {wrappers_enabled}")
     return
 
+
 def stop_graph():
     """
     stop_graph()
@@ -73,6 +75,7 @@ def stop_graph():
     wrappers_enabled = False
     dprint(f"Stopping graph tracker wrappers enabled {wrappers_enabled}")
     return
+
 
 def isfunc(mod, f):
     assert hasattr(mod, f)
@@ -95,6 +98,12 @@ def isfunc(mod, f):
 
     #Add functions to this list if they cause recursion
     ignore += ['size', 'tolist', 'dim', 'is_storage', 'item', 'data_ptr']
+
+    # Add functions to this list if they are called often, are generally extremely
+    # short, and don't lead GPU usage
+    #
+    ignore += ['empty', 'from_numpy', 'numel']
+
     if f in ignore:
         return False
     return ins.ismethod(attr) or ins.isfunction(attr) or ins.ismethoddescriptor(attr) or ins.isbuiltin(attr)
@@ -193,14 +202,12 @@ def add_wrapper(mod, fn_name):
         traceMarker_str = ""
         input_callid_list = []
 
-
         if wrappers_enabled:
 
             if config.capture_input_ops:
                 ## Stack for callids to work with nested monkey patch function calls
                 dlprof.patch_list.append(dlprof.call_id)
                 dlprof.capture_inputs(dlprof.call_id, input_callid_list, *args)
-
 
             # Push trace marker
             traceMarker_str = traceMarker(fn_name)
@@ -256,7 +263,7 @@ def add_wrapper(mod, fn_name):
                     dlprof.call_id_to_op_map[saved_call_id] = traceMarker_dict['funcStack']
 
                 starting_call_id = dlprof.patch_list[0]
-                last_call_id     = dlprof.patch_list.pop()
+                last_call_id = dlprof.patch_list.pop()
                 dlprof.call_id = dlprof.call_id + 1
         return result
 
