@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:20.11-py3
+ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:21.01-py3
 
 ############################################################################
 ## Install PyProf
 ############################################################################
 FROM $BASE_IMAGE
 
-ARG PYPROF_VERSION=3.8.0dev
-ARG PYPROF_CONTAINER_VERSION=21.01dev
+ARG PYPROF_VERSION=3.8.0
+ARG PYPROF_CONTAINER_VERSION=21.01
 
 # Copy entire repo into container even though some is not needed for the 
 # build itself... because we want to be able to copyright check on 
