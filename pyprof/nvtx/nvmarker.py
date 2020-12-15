@@ -102,7 +102,12 @@ def isfunc(mod, f):
     # Add functions to this list if they are called often, are generally extremely
     # short, and don't lead GPU usage
     #
-    ignore += ['empty', 'from_numpy', 'numel']
+    ignore += [
+        'autocast_decrement_nesting', 'autocast_increment_nesting', 'contiguous', 'detach', 'empty', 'from_numpy',
+        'has_torch_function', 'is_autocast_enabled', 'is_available', 'is_complex', 'is_floating_point',
+        'is_grad_enabled', 'is_initialized', 'is_tensor', 'numel', 'requires_grad_', 'set_autocast_enabled', 'to',
+        'type'
+    ]
 
     if f in ignore:
         return False
