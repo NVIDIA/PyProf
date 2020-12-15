@@ -20,7 +20,7 @@ ARG BASE_IMAGE=nvcr.io/nvidia/pytorch:20.11-py3
 FROM $BASE_IMAGE
 
 ARG PYPROF_VERSION=3.8.0dev
-ARG PYPROF_CONTAINER_VERSION=21.01dev
+ARG PYPROF_CONTAINER_VERSION=21.02dev
 
 # Copy entire repo into container even though some is not needed for the 
 # build itself... because we want to be able to copyright check on 
