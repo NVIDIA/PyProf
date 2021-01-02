@@ -83,7 +83,7 @@ class LogSoftmax(OperatorLayerBase):
         self.mod_ = mod
         self.op_ = op
 
-        assert (mod in ["torch", "torch.nn.functional"])
+        assert (mod in ["torch", "Tensor", "torch.nn.functional"])
         assert (op == "log_softmax")
 
         #Filter out named parameters
