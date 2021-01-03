@@ -37,9 +37,29 @@ class OneZero(OperatorLayerBase):
         self.mod_ = mod
         self.op_ = op
 
-        assert(len(args) == 1)
-        arg = args[0]
-        self.input = Tensor(arg['shape'], arg['dtype'])
+        # For ones_like, zero_, zeros_like, the input is a tensor.
+        if op in ["ones_like", "zero_", "zeros_like"]:
+            assert(len(args) == 1)
+            arg = args[0]
+            self.input = Tensor(arg['shape'], arg['dtype'])
+
+        # For ones and zeros, the input can be a list, tuple, sequence of integers.
+        # E.g. torch.ones((3,5,6)) or torch.ones([3,5,6]) or torch.ones(3,5,6)
+        else:
+            assert op in ["ones", "zeros"]
+            # TODO: Assume the output dtype is float
+            if args[0]['type'] in ['list', 'tuple']:
+                assert(len(args) == 1)
+                self.input = Tensor(args[0]['value'], "float")
+            elif args[0]['type'] == "int":
+                # Get all unnamed arguments of type int
+                args = list(filter(
+                        lambda x: x['name'] == "" and x['type'] == "int"),
+                        args)
+                shape = [x['value'] for x in args]
+                self.input = Tensor(shape, "float")
+            else:
+                assert False
 
     def params(self):
         return str(self.input)
