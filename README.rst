@@ -18,7 +18,10 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **LATEST RELEASE: You are currently working on the master branch which
+    **ANNOUNCEMENT: The default branch for PyProf has changed to 'main'. Please
+    update all pulls and PRs accordingly.**
+
+    **LATEST RELEASE: You are currently working on the main branch which
     tracks under-development progress towards the next release. The
     latest release of the PyProf is 3.7.0 and is available on branch** `r20.12
     <https://github.com/NVIDIA/PyProf/blob/r20.12>`_.

@@ -72,7 +72,7 @@ Make sure you complete the step in
 :ref:`section-quickstart-prerequisites` before attempting to build the PyProf 
 container. To build PyProf from source, change to the root directory of
 the GitHub repo and checkout the release version of the branch that
-you want to build (or the master branch if you want to build the
+you want to build (or the `main` branch if you want to build the
 under-development version)::
 
   $ git checkout r20.12
