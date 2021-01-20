@@ -168,9 +168,10 @@ def main():
         encapsulating_markers = nvvp.getEncapsulatingMarkers(global_tid, start, end)
         marker_fn = []
         for m_info in encapsulating_markers:
-            marker_hash = eval(m_info)
-            if 'funcStack' in marker_hash:
-                marker_fn = marker_hash['funcStack']
+            if 'funcStack' in m_info:
+                marker_hash = eval(m_info)
+                if 'funcStack' in marker_hash:
+                    marker_fn = marker_hash['funcStack']
 
         marker_info = ([], [], marker_fn, [], marker_txt, [], [], [], [], [], [])
         k.setMarkerInfo(marker_info)

@@ -33,8 +33,6 @@ class Softmax(OperatorLayerBase):
         assert (mod == "torch.nn.functional")
         assert (op == "softmax")
 
-        #Filter out named parameters
-        args = list(filter(lambda x: x['name'] == '', args))
 
         assert (len(args) <= 2)
         arg = args[0]

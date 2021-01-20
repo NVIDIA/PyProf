@@ -50,7 +50,7 @@ class Linear(OperatorLayerBase):
             x, w, b = args
             assert (x['type'] == w['type'] == "tensor")
             if (b['type'] == "tensor"):
-                assert (len(b['shape']) == 1)
+                assert (len(b['shape']) >= 1), "b shape {}".format(b)
             elif (b['type'] == "NoneType"):
                 assert b['value'] is None
                 b = None
@@ -64,10 +64,10 @@ class Linear(OperatorLayerBase):
         n, k2 = w['shape']
         assert (k1 == k2)
         if b is not None:
-            assert (b['shape'][0] == n)
+            assert n in b['shape'], " N {} b {}".format(n, b)
         t1 = x['dtype']
         t2 = w['dtype']
-        assert (t1 == t2)
+        #assert (t1 == t2)
 
         # X, W, B
         self.x = x['shape']

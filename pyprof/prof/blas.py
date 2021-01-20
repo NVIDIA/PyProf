@@ -121,10 +121,8 @@ class Bmm(OperatorLayerBase):
 
         assert (mod == "torch") and (op == "bmm")
 
-        #Filter out named params (kwargs)
-        args = list(filter(lambda x: x['name'] == "", args))
 
-        assert (len(args) == 2)
+        assert (len(args) == 2), "Args {}".format(args)
         A, B = args
         b1, m, k1 = A['shape']
         b2, k2, n = B['shape']
@@ -132,7 +130,7 @@ class Bmm(OperatorLayerBase):
         assert (k1 == k2)
         t1 = A['dtype']
         t2 = B['dtype']
-        assert (t1 == t2)
+        #assert (t1 == t2)
 
         self.A = A
         self.B = B
@@ -150,7 +148,7 @@ class Bmm(OperatorLayerBase):
 
     def params(self):
         #p = OrderedDict([('A', A['shape']), ('B', B['shape']), ('type', t1)])
-        p = OrderedDict([('B', self.b), ('M', self.n), ('N', self.m), ('K', self.k), ('type', self.type)])
+        p = OrderedDict([('B', self.b), ('M', self.m), ('N', self.n), ('K', self.k), ('type', self.type)])
         return p
 
     def flops(self):

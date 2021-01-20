@@ -37,9 +37,19 @@ class OneZero(OperatorLayerBase):
         self.mod_ = mod
         self.op_ = op
 
-        assert(len(args) == 1)
+        assert len(args) >= 1, "Unexpected args {}".format(args)
         arg = args[0]
-        self.input = Tensor(arg['shape'], arg['dtype'])
+        assert 'type' in arg, "Unexpected arg {} op {} data {}".format(arg, op, d.argMarker[0])
+        if arg['type'] == 'tensor':
+            assert 'shape' in arg and 'dtype' in arg, "Unexpected Tensor fields {}".format(arg)
+            shape = arg['shape']
+            dtype = arg['dtype']
+        if arg['type'] == 'int':
+            ## shape expected to be a tuple
+            assert 'value' in arg, "Unexpected arg {}".format(arg)
+            shape = (arg['value'],)
+            dtype = arg['type']
+        self.input = Tensor(shape, dtype)
 
     def params(self):
         return str(self.input)
