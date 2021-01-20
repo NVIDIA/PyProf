@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,40 +41,6 @@ import traceback
 import math
 import json
 import importlib
-from .config import Config
-from .dlprof import DLProf
-from .dlprof import dprint
-
-# Singleton object tracking dlprof specific information
-dlprof = DLProf()
-# flag to control wrapping ops in nvtx markers
-wrappers_enabled = True
-
-
-def start_graph():
-    """
-    start_graph()
-        This function is exported in __init__.py so the instrumentation code
-        can control which iteration to capture the network graph.
-        Use this in conjunction with config option --delay_graph_capture
-    """
-    global wrappers_enabled
-    wrappers_enabled = True
-    dprint(f"Starting graph tracker wrappers enabled {wrappers_enabled}")
-    return
-
-
-def stop_graph():
-    """
-    stop_graph()
-        This function is exported in __init__.py so the instrumentation code can
-        stop the graph capture at the end of a specific iteration.
-        Use this in conjunction with config option --delay_graph_capture
-    """
-    global wrappers_enabled
-    wrappers_enabled = False
-    dprint(f"Stopping graph tracker wrappers enabled {wrappers_enabled}")
-    return
 
 
 def isfunc(mod, f):
@@ -116,63 +82,14 @@ def isfunc(mod, f):
 
 # Returns a dict string with a tracemarker and function stack in it
 #
-def traceMarker(op_name):
-
-    config = Config()
-
-    # Return a trace marker string and func_stack string
-    #
-    def get_trace_info(op_name):
-        cadena = []
-        stack = traceback.extract_stack()
-        func_stack = ""
-
-        # Previous frame name and line. This is the file and line
-        # that CALLED the frame we are in
-        #
-        prev_fn = ""
-
-        # Starting at index of 2 to ignore this function and its parent (traceMarker).
-        # Intentionally leaving in wrapper_func and other functions in this file as they
-        # may be needed to uniquify the node name
-        #
-        for idx in range(len(stack) - 2):
-            frame = stack[idx]
-
-            # Build traceMarker
-            #
-
-            # Don't include any functions from this file (nvmarker.py)
-            # Also skip repeated back to back cases of the same file/line (recursive calls)
-            #
-            fnl = "{}:{}".format(frame.filename, frame.lineno)
-            if (not frame.filename.endswith("nvmarker.py") and fnl != prev_fn):
-                cadena.append(fnl)
-
-            # Early exit if we aren't doing any funcStack code
-            #
-            if not config.func_stack_enabled:
-                continue
-            else:
-                ins_frame = ins.currentframe()
-                fn_name = dlprof.build_function_stack(idx, func_stack, frame.name, prev_fn, op_name, stack, ins_frame)
-                del ins_frame
-            prev_fn = fnl
-
-            # Append this frame's info into the function stack
-            #
-            func_stack = func_stack + "/" + fn_name
-
-        if config.func_stack_enabled:
-            func_stack = dlprof.cleanup_func_stack(func_stack, op_name)
-
-        return cadena, func_stack
-
+def traceMarker(stack):
     d = {}
-    tm, fs = get_trace_info(op_name)
-    d['traceMarker'] = tm
-    if config.func_stack_enabled:
-        d['funcStack'] = fs
+    cadena = []
+    for i in range(len(stack) - 1):
+        fi = stack[i]
+        t = f"{fi.filename}:{fi.lineno}"
+        cadena.append(t)
+    d['traceMarker'] = cadena
     return str(d)
 
 
@@ -189,8 +106,6 @@ def modMarker(mod, fn_name, args):
 
 def add_wrapper(mod, fn_name):
 
-    config = Config()
-
     # Get a pointer to the original function
     func = getattr(mod, fn_name)
 
@@ -203,73 +118,34 @@ def add_wrapper(mod, fn_name):
 
     def wrapper_func(*args, **kwargs):
 
-        global wrappers_enabled
-        traceMarker_str = ""
-        input_callid_list = []
+        # Extract the stacktrace
+        stack = traceback.extract_stack()
 
-        if wrappers_enabled:
+        # Push trace marker
+        nvtx.range_push(traceMarker(stack))
 
-            if config.capture_input_ops:
-                ## Stack for callids to work with nested monkey patch function calls
-                dlprof.patch_list.append(dlprof.call_id)
-                dlprof.capture_inputs(dlprof.call_id, input_callid_list, *args)
+        # Push module marker
+        if s:
+            m = modMarker(mod, fn_name, args)
+            nvtx.range_push(m)
 
-            # Push trace marker
-            traceMarker_str = traceMarker(fn_name)
-            nvtx.range_push(traceMarker_str)
-
-            # Push module marker
-            if s:
-                m = modMarker(mod, fn_name, args)
-                nvtx.range_push(m)
-
-            # Create and push argument marker
-            #
-            # Disable wrappers while getting the argMarker in case it
-            # ends up executing another wrapped function
-            wrappers_enabled = False
-            if config.capture_input_ops:
-                saved_call_id = dlprof.call_id
-                # Keeps call_id correct when there are nested
-                # monkey patch functions
-                if dlprof.call_id != dlprof.patch_list[0]:
-                    saved_call_id = dlprof.patch_list[0]
-                cadena = argMarker(mod, fn_name, args, kwargs, saved_call_id, input_callid_list)
-            else:
-                cadena = argMarker(mod, fn_name, args, kwargs)
-            nvtx.range_push(cadena)
-            wrappers_enabled = True
+        # Create and push argument marker
+        cadena = argMarker(mod, fn_name, args, kwargs)
+        nvtx.range_push(cadena)
 
         # Call the original function
         result = func(*args, **kwargs)
 
-        if wrappers_enabled:
-            # Pop argumet marker
+        # Pop argumet marker
+        nvtx.range_pop()
+
+        # Pop module marker
+        if s:
             nvtx.range_pop()
 
-            # Pop module marker
-            if s:
-                nvtx.range_pop()
+        # Pop trace marker
+        nvtx.range_pop()
 
-            # Pop trace marker
-            nvtx.range_pop()
-
-            if config.capture_input_ops:
-                # Keeps call_id correct when there are nested
-                # monkey patch functions
-                saved_call_id = dlprof.call_id
-                if dlprof.call_id != dlprof.patch_list[0]:
-                    saved_call_id = dlprof.patch_list[0]
-                dlprof.capture_outputs(saved_call_id, result)
-                # Store the callid -> op_name mapping
-                if traceMarker_str != "":
-                    traceMarker_str = traceMarker_str.replace("\'", "\"")
-                    traceMarker_dict = json.loads(traceMarker_str)
-                    dlprof.call_id_to_op_map[saved_call_id] = traceMarker_dict['funcStack']
-
-                starting_call_id = dlprof.patch_list[0]
-                last_call_id = dlprof.patch_list.pop()
-                dlprof.call_id = dlprof.call_id + 1
         return result
 
     setattr(mod, fn_name, wrapper_func)
@@ -277,12 +153,8 @@ def add_wrapper(mod, fn_name):
 
 def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     #For this function args is a tuple and kwargs is a dict
-    config = Config()
 
     def tensor(arg, name=""):
-        if config.capture_input_ops:
-            cid = dlprof.op_to_out_tensor_map.get(arg.data_ptr(), -1)
-            name = dlprof.call_id_to_op_map.get(int(cid), "")
         a = {}
         a['name'] = name
         a['type'] = "tensor"
@@ -362,9 +234,6 @@ def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     cadena = {}
     cadena['mod'] = mod.__name__
     cadena['op'] = op
-    if config.capture_input_ops:
-        cadena['callid'] = idx
-        cadena['input_callids'] = inputid_list
     cadena['args'] = []
 
     foo(args, "")
@@ -506,7 +375,7 @@ def patch_apex_module(modstr):
     if importlib.util.find_spec(modstr) is not None:
         mod = importlib.import_module(modstr)
 
-        for n, v in ins.getmembers(mod):
+        for _, v in ins.getmembers(mod):
             # This makes sure we don't patch random other modules that are imported by the target module
             #
             if is_same_module_or_submodule(mod, ins.getmodule(v)):
@@ -524,167 +393,10 @@ def patch_apex_class(cls):
                 add_wrapper(cls, f)
 
 
-def push_nvtx_model_config(config):
-    """
-    Helper function to dump the passed in dict config as an nvtx
-    marker with "model_config" key
-    """
-    nvtx_msg = json.dumps({"model_config": config})
-    nvtx.range_push(nvtx_msg)
-
-
-def patch_dataloader_init():
-    """
-    Capture dataloader config (num_workers and pin_memory) and
-    emit a model_config nvtx range with the information
-    """
-    mod = torch.utils.data.dataloader
-    old_init = mod.DataLoader.__init__
-
-    def new_init(self, *args, **kwargs):
-
-        num_workers = kwargs.get("num_workers", 0)
-        pin_memory = kwargs.get("pin_memory", False)
-
-        push_nvtx_model_config({"num_workers": num_workers, "pin_memory": pin_memory})
-        old_init(self, *args, **kwargs)
-        nvtx.range_pop()
-
-    mod.DataLoader.__init__ = new_init
-
-
-# Flag to indicate that cudnn_benchmark_disabled has already been reported
-#
-cudnn_benchmark_disabled_reported = False
-
-
-def patch_with_always_benchmark(mod, fn_name):
-    """
-    Patch the given mod/function so that if it is ever executed and 
-    torch.backends.cudnn.benchmark is not true, it will emit an nvtx
-    range to report that fact
-    """
-    assert isfunc(mod, fn_name)
-    old_fn = getattr(mod, fn_name)
-
-    def always_benchmark_wrapper(*args, **kwargs):
-        global cudnn_benchmark_disabled_reported
-
-        add_nvtx = not torch.backends.cudnn.benchmark and not cudnn_benchmark_disabled_reported
-        if add_nvtx:
-            cudnn_benchmark_disabled_reported = True
-            push_nvtx_model_config({"cudnn_benchmark_disabled": True})
-
-        result = old_fn(*args, **kwargs)
-
-        if add_nvtx:
-            nvtx.range_pop()
-
-        return result
-
-    setattr(mod, fn_name, always_benchmark_wrapper)
-
-
-def patch_never_call(mod, fn_name, key):
-    """
-    Patch the given mod/function. If the function is executed, emit 
-    an nvtx_range with data indicating that 'key' was true
-    """
-    old_fn = getattr(mod, fn_name)
-
-    def wrapper_func(*args, **kwargs):
-        push_nvtx_model_config({key: True})
-        result = old_fn(*args, **kwargs)
-        nvtx.range_pop()
-        return result
-
-    setattr(mod, fn_name, wrapper_func)
-
-
-def patch_never_call_with_args(mod, fn_name, key, bad_args):
-    """
-    Patch the given mod/function. If the function is executed 
-    and any of the bad args have any of the listed bad values, 
-    emit an nvtx_range with data indicating that 'key' was true
-    """
-    old_fn = getattr(mod, fn_name)
-
-    def wrapper_func(*args, **kwargs):
-
-        signature = ins.signature(old_fn)
-        bound = signature.bind(*args, **kwargs)
-        bound.apply_defaults()
-
-        problem = False
-        for k, v in bound.arguments.items():
-            if k in bad_args:
-                if v in bad_args[k]:
-                    problem = True
-
-        if problem:
-            push_nvtx_model_config({key: True})
-
-        result = old_fn(*args, **kwargs)
-
-        if problem:
-            nvtx.range_pop()
-
-        return result
-
-    setattr(mod, fn_name, wrapper_func)
-
-
-def patch_model_configs():
-    """
-    Patch functions that help gather high-level configuration options for the model.
-    All resulting nvtx ranges will have 'model_config' as the primary key
-    """
-
-    patch_dataloader_init()
-
-    patch_with_always_benchmark(torch.nn.functional, "conv1d")
-    patch_with_always_benchmark(torch.nn.functional, "conv2d")
-    patch_with_always_benchmark(torch.nn.functional, "conv3d")
-    patch_with_always_benchmark(torch.nn.functional, "conv_transpose1d")
-    patch_with_always_benchmark(torch.nn.functional, "conv_transpose2d")
-    patch_with_always_benchmark(torch.nn.functional, "conv_transpose3d")
-
-    patch_never_call(torch.autograd.detect_anomaly, "__init__", "detect_anomaly")
-    patch_never_call(torch.autograd, "gradcheck", "gradcheck")
-    patch_never_call(torch.autograd, "gradgradcheck", "gradgradcheck")
-    patch_never_call(torch.autograd.profiler.record_function, "__init__", "record_function")
-
-    # Patch both AMP libraries
-    #
-    import importlib
-    if importlib.util.find_spec("apex") is not None and importlib.util.find_spec("apex.amp") is not None:
-        import apex.amp
-        patch_never_call_with_args(apex.amp, "initialize", "amp_enabled", {"enabled": {True}})
-    patch_never_call_with_args(torch.cuda.amp, "autocast", "amp_enabled", {"enabled": {True}})
-
-    patch_never_call_with_args(torch.autograd.profiler.profile, "__init__", "profile", {"enabled": {True}})
-    patch_never_call_with_args(torch.autograd.set_detect_anomaly, "__init__", "detect_anomaly", {"mode": {True}})
-    patch_never_call_with_args(torch.autograd.profiler.emit_nvtx, "__init__", "emit_nvtx", {"enabled": {True}})
-
-
 def init(*args, **kwargs):
     """
     Initialize pyprof and monkey-patch Torch functions
-
-    Kwargs:
-        enable_function_stack (bool): When true, function stack information 
-            will be added to NVTX markers
-        capture_input_ops (bool): When true, input tensor names will be added 
-            to NVTX markers and enable_function_stack is set to True.
     """
-    global wrappers_enabled
-
-    config = Config(*args, **kwargs)
-
-    if config.delay_graph_capture:
-        ## Disable wrappers_enabled at init when user wants to control
-        ## which iteration to begin graph capture
-        wrappers_enabled = False
 
     print("Initializing NVTX monkey patches")
 
@@ -692,6 +404,5 @@ def init(*args, **kwargs):
     patch_dataloader()
     patch_torch_classes()
     patch_torch_nn_forward_functions()
-    patch_model_configs()
 
     print("Done with NVTX monkey patching")
