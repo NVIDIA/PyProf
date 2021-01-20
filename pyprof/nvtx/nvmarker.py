@@ -90,7 +90,8 @@ def isfunc(mod, f):
         '__format__', '__getattribute__', '__getitem__', '__hash__', '__index__', '__init__', '__init_subclass__',
         '__iter__', '__len__', '__loader__', '__module__', '__name__', '__new__', '__nonzero__', '__package__',
         '__path__', '__reduce__', '__reduce_ex__', '__repr__', '__reversed__', '__setattr__', '__setitem__',
-        '__setstate__', '__sizeof__', '__spec__', '__str__', '__subclasshook__', '__version__', '__weakref__'
+        '__setstate__', '__sizeof__', '__spec__', '__str__', '__subclasshook__', '__version__',
+        '__weakref__', 'is_floating_point', 'is_tensor', 'type'
     ]
 
     #Add functions to this list if they cause recursion

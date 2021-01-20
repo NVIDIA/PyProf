@@ -28,7 +28,8 @@ def parseArgs():
         valid = [
             "idx", "seq", "altseq", "tid", "layer", "trace", "dir", "sub", "mod", "op", "kernel",\
             "kernel_lname", "params", "sil", "tc",\
-            "device", "stream", "grid", "block", "flops", "bytes", "callid", "input_callids"\
+            "device", "stream", "grid", "block", "flops", "bytes", "callid", "input_callids",
+            "all"\
         ]
         cols = value.split(",")
         for col in cols:
@@ -74,6 +75,7 @@ grid:     Grid Dimensions
 block:    Block Dimensions
 flops:    Floating point ops (FMA = 2 FLOPs)
 bytes:    Number of bytes in and out of DRAM
+all:      Display all colums in the table
 e.g. -c idx,kernel,sil'''
     )
 

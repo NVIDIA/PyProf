@@ -101,6 +101,8 @@ def main():
         #Set op
         k.setOp()
 
+        k.setUniqueName()
+
         #The following code is based on heuristics.
         #TODO: Refactor.
         #Assign subSeqId, adjust seqId and altSeqId
@@ -158,14 +160,26 @@ def main():
     for marker in markers:
         #print("{}".format(markers[marker]))
         k = Kernel()
-        marker_info = ([], [], [] , markers[marker], [], [], [], [], [], [])
-        #print("Setting marker info {}".format(marker_info))
+        marker_txt = markers[marker]
+        marker_item = eval(marker_txt[0])
+        global_tid = marker_item['globalTid']
+        start      = marker_item['start']
+        end        = marker_item['end']
+        encapsulating_markers = nvvp.getEncapsulatingMarkers(global_tid, start, end)
+        marker_fn = []
+        for m_info in encapsulating_markers:
+            marker_hash = eval(m_info)
+            if 'funcStack' in marker_hash:
+                marker_fn = marker_hash['funcStack']
+
+        marker_info = ([], [], marker_fn, [], marker_txt, [], [], [], [], [], [])
         k.setMarkerInfo(marker_info)
         k.setDirection()
         k.setOp()
+        k.setUniqueName()
         k.setKernelName('cpu_kernel')
         ## Fake the runtime stats end - start = 0
-        info = {'rStart': 1, 'rEnd': 2, 'pid': 0, 'tid': 0, 'objId': 0}
+        info = {'rStart': start, 'rEnd': end, 'pid': 0, 'tid': global_tid, 'objId': global_tid}
         k.setRunTimeInfo(info)
         k.kDuration = 0
 

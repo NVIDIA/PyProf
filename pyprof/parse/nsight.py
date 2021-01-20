@@ -97,7 +97,7 @@ class Nsight(object):
         getAllMarkers()
         '''
         callid_markers = {}
-        cmd = "SELECT  globalTid,text from marker ORDER BY start ASC"
+        cmd = "SELECT  globalTid,text,start,end from marker ORDER BY start ASC"
         result = self.db.select(cmd)
         for row in result:
             marker = row['text']
@@ -107,12 +107,34 @@ class Nsight(object):
                 item = eval(marker)
                 assert isinstance(item, dict), "Error - marker item {} not a dictionary".format(item)
                 callid = item['callid']
+                item['start'] = row['start']
+                item['end'] = row['end']
+                item['globalTid'] = row['globalTid']
+                marker = "{}".format(item)
                 if callid not in callid_markers:
                     callid_markers[callid] = []
                 callid_markers[callid].append(marker)
 
         return callid_markers
     ## End Input node tracking
+
+    def getEncapsulatingMarkers(self, objId, startTime, endTime):
+        """
+        getEncapsulatingMarkers()
+            Finds all the markers that contain this time range passed in as arguments
+        """
+        marker_list = []
+        #Find all encapsulating markers
+        cmd = 'SELECT text from {} where \
+				globalTid = {} and \
+				start < {} and \
+				end > {} \
+				ORDER BY start ASC'.format(self.markerT, objId, startTime, endTime)
+        result = self.db.select(cmd)
+        for row in result:
+            marker_list.append(row['text'])
+
+        return marker_list
 
     def getMarkerInfo(self, objId, startTime, endTime):
         """
@@ -209,6 +231,21 @@ class Nsight(object):
                     a.append(m)
             return a
 
+        def filterFnName(mlist):
+            """
+            Filter the 'funcStack' key out of the traceMarkers
+            funcStack will be the unique name of the operator
+            It provides context related to where in the callstack
+            the op was called
+            """
+            assert (type(mlist) == list)
+            if len(mlist) == 0:
+                return mlist
+            mlist = mlist[-1]  #The last stack trace will be a super set.
+            mlist = eval(mlist)
+            mlist = mlist['funcStack']
+            return mlist
+
         def filterTrace(mlist):
             """
 			Filter trace markers to remove certain file names.
@@ -302,8 +339,14 @@ class Nsight(object):
         delete(objId, startTime)
         #delete("", startTime)
 
-        return layerMarkers, filterTrace(
-            traceMarkers
-        ), reprMarkers, pyprofMarkers, seqMarkers, otherMarkers, altSeqMarkers, getSeqId(seqMarkers), getSeqId(
-            altSeqMarkers
-        ), getLayerName(layerMarkers)
+        return layerMarkers,\
+                filterTrace(traceMarkers),\
+                filterFnName(traceMarkers),\
+                reprMarkers,\
+                pyprofMarkers,\
+                seqMarkers,\
+                otherMarkers,\
+                altSeqMarkers,\
+                getSeqId(seqMarkers),\
+                getSeqId(altSeqMarkers),\
+                getLayerName(layerMarkers)

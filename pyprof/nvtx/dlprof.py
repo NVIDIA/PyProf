@@ -44,6 +44,7 @@ class DLProf(object):
             cls.call_id = 0  # input op tracking identifier
             cls.op_to_out_tensor_map = {}  # map from tensor ptr to to call_id
             cls.call_id_to_op_map = {}  # map from call_id to op name
+            cls.func_stack_names = {} # Stores instance count of each func stack name
             cls.patch_list       = [] # used to track nested callids
             # Nested dicts of this run's frame names to help uniquify them
             # func_map[(partial_func_stack,frame_name)][filename+lineno] = frame_name_to_use
@@ -206,3 +207,19 @@ class DLProf(object):
             cls.op_to_out_tensor_map[output_ptr] = f"{call_id}"
 
         dprint(f"call_id {call_id} output tensors {output_tensors}")
+
+    @classmethod
+    def make_unique_op_name(cls, function_stack):
+        '''
+        make_unique_op_name()
+        '''
+        count = 0
+        if function_stack in cls.func_stack_names:
+            count = cls.func_stack_names[function_stack] + 1
+            cls.func_stack_names[function_stack] = count
+        else:
+            cls.func_stack_names[function_stack] = count
+
+        function_stack = function_stack + "/{}".format(count)
+        dprint("func_stack {} count {}".format(function_stack, count))
+        return function_stack

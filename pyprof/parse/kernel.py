@@ -76,6 +76,7 @@ class Kernel(object):
 
         self.layerMarkers = []
         self.traceMarkers = []
+        self.fnNameMarkers = []
         self.reprMarkers = []
         self.pyprofMarkers = []
         self.seqMarkers = []
@@ -92,6 +93,7 @@ class Kernel(object):
         self.dir = None
         self.mod = []
         self.op = []
+        self.unique_name = None
 
     def setKernelInfo(self, info):
         self.kNameId = info['kNameId']
@@ -128,7 +130,7 @@ class Kernel(object):
             assert (self.rStartTime < self.kStartTime)
 
     def setMarkerInfo(self, info):
-        self.layerMarkers, self.traceMarkers, self.reprMarkers, self.pyprofMarkers, self.seqMarkers, self.otherMarkers, self.altMarkers, self.seqId, self.altSeqId, self.layer = info
+        self.layerMarkers, self.traceMarkers, self.fnNameMarkers, self.reprMarkers, self.pyprofMarkers, self.seqMarkers, self.otherMarkers, self.altMarkers, self.seqId, self.altSeqId, self.layer = info
         self.subSeqId = 0
 
     def setDirection(self):
@@ -142,6 +144,18 @@ class Kernel(object):
             self.dir = "bprop"
         else:
             self.dir = "fprop"
+
+    def setUniqueName(self):
+        '''
+        Maps unique name set by funcStack to the callid
+        Must be called after setOp
+        '''
+        if self.callid:
+            assert len(self.callid) == 1, "Only 1 callid expected per op"
+            if  self.callid[0] != 'na':
+                assert self.fnNameMarkers, "Call id {} doesn't have fnName marker {}".format(self.callid, self.traceMarkers)
+                self.unique_name = self.fnNameMarkers
+        return
 
     def setOp(self):
         """
@@ -164,6 +178,7 @@ class Kernel(object):
             head, sep, tail = name.partition("Backward")
             return head
 
+        check_func_stack = False
         #Check pyprof markers
         for m in self.pyprofMarkers:
             assert ("mod" in m) and ("op" in m) and ("args" in m)
@@ -244,5 +259,6 @@ class Kernel(object):
         a.grid = self.grid
         a.block = self.block
         a.kLongName = self.kLongName
+        a.unique_name = self.unique_name
 
         print(a.__dict__)

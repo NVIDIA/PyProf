@@ -27,6 +27,7 @@ For every kernel (line) in the input it determines
 	and other things. Please see the tool usage.
 """
 
+import re
 from .usage import parseArgs
 from .output import Output
 from .utility import Utility
@@ -198,6 +199,37 @@ def foo(mod, op, d):
 
     return xx
 
+def make_unique_op_name(layer_map, func_name, callid, op_type_list):
+    '''
+    make_unique_op_name()
+        This function makes a unique layer name by mapping layer types
+        to long layer names and incrementing the count only when new callids
+        are observed.
+        Data structure
+          Hash indexed by layer_type
+            - values are list of callids
+            - count the number of callids in the list
+               - that's the value to append to long layer
+                 name, which makes it unique
+
+    '''
+    count = 0
+    if func_name:
+        callid_list = []
+        op_type = op_type_list[0]
+        if op_type in layer_map:
+            callid_list = layer_map[op_type]
+        else:
+            layer_map[op_type] = callid_list
+        if callid[0] not in callid_list:
+            callid_list.append(callid[0])
+        count = len(callid_list)
+        assert count > 0, "Unexpected count {} for layer type {}".format(count, op_type)
+        count = count - 1
+        func_name = func_name + "/{}".format(count)
+
+    return func_name
+
 
 def main():
     #Read cmd line arguments
@@ -206,6 +238,8 @@ def main():
     output = Output(cmdArgs)
     output.header()
 
+    layer_name_map = {} # Stores instance count of each func stack name
+    callid_to_unique_name_map = {}
     idx = -1
     #Read in all the kernel info
     for line in cmdArgs.file:
@@ -222,7 +256,10 @@ def main():
 
         callid = k['callid']                ## Input node tracking
         input_callids = k['input_callids']  ## Input node tracking
-
+        unique_name = k['unique_name']
+        unique_name = make_unique_op_name(layer_name_map, unique_name, callid, op)
+        if callid[0] not in callid_to_unique_name_map:
+            callid_to_unique_name_map[callid[0]] = unique_name
 
         flops = 0
         params = {"na": "na"}
@@ -253,6 +290,9 @@ def main():
 
                     d.layer = kernels[index]['layer']
                     d.trace = kernels[index]['trace']
+                    unique_name = kernels[index]['unique_name']
+                    if callid[0] in callid_to_unique_name_map:
+                        unique_name = callid_to_unique_name_map[callid[0]]
 
         # Check if marker has our annotations
         if len(d.argMarker) and Utility.hasNVTX(d.argMarker[0]):
@@ -288,6 +328,7 @@ def main():
         d.op = op
         d.callid = callid               ## Input node tracking
         d.input_callids = input_callids ## Input node tracking
+        d.unique_name   = unique_name   ## Unique layer name
 
         output.data(d)
 

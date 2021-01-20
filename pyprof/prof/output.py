@@ -29,8 +29,9 @@ class Output():
         "idx": ["Idx", "index", int, 7],
         "seq": ["SeqId", "seqId", str, 7],
         "altseq": ["AltSeqId", "altSeqId", str, 7],
-        "callid":   ["callid",      "callid",   str,    7],    ## Input node tracking
-        "input_callids":    ["input_callids",       "input_callids",    str,    7], ## Input node tracking
+        "callid": ["callid", "callid", str, 7],    ## Input node tracking
+        "input_callids": ["input_callids", "input_callids", str, 7], ## Input node tracking
+        "unique_name": ["unique_name", "unique_name", str, 25],
         "tid": ["TId", "tid", int, 12],
         "layer": ["Layer", "layer", str, 10],
         "trace": ["Trace", "trace", str, 25],
@@ -58,6 +59,10 @@ class Output():
         self.width = args.w
 
         w = 0
+        ## if user specifies -c all - display all columns
+        ## in the table
+        if len(self.cols) == 1 and self.cols[0] == "all":
+            self.cols = Output.table.keys()
         for col in self.cols:
             assert col in Output.table.keys(), "col {} not in table".format(col)
             w += Output.table[col][3]
