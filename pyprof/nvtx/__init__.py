@@ -17,5 +17,3 @@
 
 from .nvmarker import init
 from .nvmarker import add_wrapper as wrap
-from .nvmarker import start_graph
-from .nvmarker import stop_graph
