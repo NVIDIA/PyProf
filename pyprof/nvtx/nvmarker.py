@@ -151,7 +151,7 @@ def add_wrapper(mod, fn_name):
     setattr(mod, fn_name, wrapper_func)
 
 
-def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
+def argMarker(mod, op, args, kwargs):
     #For this function args is a tuple and kwargs is a dict
 
     def tensor(arg, name=""):
