@@ -401,7 +401,7 @@ def init(*args, **kwargs):
     print("Initializing NVTX monkey patches")
 
     patch_apex()
-    patch_dataloader()
+    # patch_dataloader()
     patch_torch_classes()
     patch_torch_nn_forward_functions()
 
