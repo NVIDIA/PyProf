@@ -86,7 +86,7 @@ class Reshape(OperatorLayerBase):
         self.op_ = op
         self.args = args
 
-        assert (mod == "Tensor")
+        assert (mod == "Tensor" or mod == 'torch'), "Unexpected mod {}".format(mod)
         assert (op == "reshape")
 
         #Temporarily commenting three lines

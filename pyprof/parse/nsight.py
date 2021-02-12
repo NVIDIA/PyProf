@@ -101,7 +101,7 @@ class Nsight(object):
         result = self.db.select(cmd)
         for row in result:
             marker = row['text']
-            if 'callid' in marker and 'input_callid' in marker:
+            if marker and  'callid' in marker and 'input_callid' in marker:
                 ## Add to a dictionary indexed by callid
                 #print("Found Marker {}".format(marker))
                 item = eval(marker)

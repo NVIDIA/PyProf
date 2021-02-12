@@ -194,8 +194,10 @@ def add_wrapper(mod, fn_name):
         traceMarker_str = ""
         input_callid_list = []
 
-
         if wrappers_enabled:
+            dprint(f"Starting call_id {dlprof.call_id} Fn {fn_name} patch_list {dlprof.patch_list}")
+            dprint(f"-----Calling patched function {fn_name} call_id {dlprof.call_id} from class"\
+                    f"{mod} len args {len(args)} len kwargs {len(kwargs)}")
 
             if config.capture_input_ops:
                 ## Stack for callids to work with nested monkey patch function calls
@@ -247,17 +249,22 @@ def add_wrapper(mod, fn_name):
                 # Keeps call_id correct when there are nested
                 # monkey patch functions
                 saved_call_id = dlprof.call_id
+                dprint(f"callid {dlprof.call_id} patch_list {dlprof.patch_list}")
                 if dlprof.call_id != dlprof.patch_list[0]:
                     saved_call_id = dlprof.patch_list[0]
                 dlprof.capture_outputs(saved_call_id, result)
                 # Store the callid -> op_name mapping
-                if traceMarker_str is not "":
+                if traceMarker_str != "":
                     traceMarker_str = traceMarker_str.replace("\'", "\"")
                     traceMarker_dict = json.loads(traceMarker_str)
                     dlprof.call_id_to_op_map[saved_call_id] = traceMarker_dict['funcStack']
+                dprint(f"Fn {fn_name} Incrementing call_id from {dlprof.call_id} to {dlprof.call_id + 1}"\
+                        f" patch_list {dlprof.patch_list}")
 
                 starting_call_id = dlprof.patch_list[0]
                 last_call_id     = dlprof.patch_list.pop()
+                dprint(f"Ending:callid: {dlprof.call_id} orig callid {starting_call_id}"\
+                        f" last_callid {last_call_id} patch_list {dlprof.patch_list} ")
                 dlprof.call_id = dlprof.call_id + 1
         return result
 
@@ -509,7 +516,7 @@ def patch_apex_class(cls):
     """
     for f in cls.__dict__:
         if (ins.isfunction(cls.__dict__[f])):
-            if f in ["forward", "backward", "step"]:
+            if f in ["backward", "step"]:
                 add_wrapper(cls, f)
 
 

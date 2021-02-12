@@ -34,7 +34,7 @@ class Softmax(OperatorLayerBase):
         assert (op == "softmax")
 
 
-        assert (len(args) <= 2)
+        #assert (len(args) <= 2)
         arg = args[0]
         self.input = Tensor(arg['shape'], arg['dtype'])
         self.dir = d.dir
