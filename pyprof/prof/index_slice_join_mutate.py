@@ -33,6 +33,8 @@ class Cat(OperatorLayerBase):
         args = marker['args']
         self.mod_ = mod
         self.op_ = op
+        self.axis = 0
+        self.num_dims = 0
 
         assert (mod == "torch")
         assert (op == "cat")
@@ -41,19 +43,31 @@ class Cat(OperatorLayerBase):
         dtype = args[0]['dtype']
         tensors = []
 
-        # Get all tensor arguments
-        args = filter(lambda x: x['type'] == "tensor", args)
-
+        #Find the value of the axis used for cat. This is provided through a non-tensor input arg
+        axis_found = False
         for arg in args:
-            assert (arg['dtype'] == dtype)
-            t = Tensor(arg['shape'], dtype)
-            tensors.append(t)
+            if arg['type'] == "tensor":
+                assert (arg['dtype'] == dtype)
+                t = Tensor(arg['shape'], dtype)
+                tensors.append(t)
+                if self.num_dims == 0:
+                    self.num_dims = len(arg['shape'])
+                else:
+                    assert len(arg['shape']) == self.num_dims,\
+                            "Unexpected tensor shape {} expecting {}".format(arg['shape'], self.num_dims)
+            if arg['name'] == 'dim' and arg['type'] == "int":
+                axis = arg['value']
+                if axis == -1:
+                    axis = self.num_dims - 1
+                self.axis = axis
 
         self.input = tensors
         self.sub = d.sub
 
     def params(self):
-        return ";".join([str(t) for t in self.input])
+        param_str = ";".join([str(t) for t in self.input])
+        param_str = ",".join(["T={}".format(param_str), "A={}".format(self.axis)])
+        return param_str
 
     def flops(self):
         return 0

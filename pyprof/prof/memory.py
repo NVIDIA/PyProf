@@ -44,11 +44,13 @@ class OneZero(OperatorLayerBase):
             assert 'shape' in arg and 'dtype' in arg, "Unexpected Tensor fields {}".format(arg)
             shape = arg['shape']
             dtype = arg['dtype']
-        if arg['type'] == 'int':
+        else:
             ## shape expected to be a tuple
             assert 'value' in arg, "Unexpected arg {}".format(arg)
             shape = (arg['value'],)
             dtype = arg['type']
+            dtype = 'int'
+
         self.input = Tensor(shape, dtype)
 
     def params(self):

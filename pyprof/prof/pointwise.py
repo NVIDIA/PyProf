@@ -179,7 +179,7 @@ class Pointwise(OperatorLayerBase):
                 if (self.op() in ["add", "__add__", "sub", "__sub__", "__isub__"]):
                     b = 2 * out.bytes
                     f = 0
-                elif (self.op() in ["__mul__", "__imul__", "__rmul__", "div", "__truediv__"]):
+                elif (self.op() in ["__mul__", "__imul__", "__rmul__", "mul_", "div", "__truediv__"]):
                     b = 3 * out.bytes
                     f = out.size
                 else:
