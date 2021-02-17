@@ -59,9 +59,9 @@ class Addmm(OperatorLayerBase):
         self.beta = beta
 
         #Filter out named parameters
-        args = list(filter(lambda x: x['name'] == '', args))
+        args = list(filter(lambda x: (x['name'] != 'alpha' and x['name'] != 'beta'), args))
 
-        assert (len(args) == 3)
+        assert (len(args) == 3), "Len {} Args {}".format(len(args), args)
         C, A, B = args
         m, k1 = A['shape']
         k2, n = B['shape']

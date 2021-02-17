@@ -38,7 +38,7 @@ class Cat(OperatorLayerBase):
 
         assert (mod == "torch")
         assert (op == "cat")
-        assert (len(args) >= 2)
+        #assert (len(args) >= 2), "Unexpected args {}".format(args)
 
         dtype = args[0]['dtype']
         tensors = []
@@ -55,7 +55,7 @@ class Cat(OperatorLayerBase):
                 else:
                     assert len(arg['shape']) == self.num_dims,\
                             "Unexpected tensor shape {} expecting {}".format(arg['shape'], self.num_dims)
-            if arg['name'] == 'dim' and arg['type'] == "int":
+            if arg['name'] == 'dim':
                 axis = arg['value']
                 if axis == -1:
                     axis = self.num_dims - 1
@@ -199,7 +199,6 @@ class MaskedScatter(OperatorLayerBase):
 
         dst, mask, src = args
         assert (dst['type'] == mask['type'] == src['type'] == "tensor")
-        assert (mask['dtype'] == "uint8")
         assert (dst['dtype'] == src['dtype'])
         assert (dst['shape'] == mask['shape'])
 
@@ -314,20 +313,9 @@ class IndexSelect(OperatorLayerBase):
         assert (len(args) == 3)
 
         #Get input, dim and index
-        if (args[0]['name'] == ""):
-            t = args[0]
-        else:
-            t = list(filter(lambda x: x['name'] == "input", args))[0]
-
-        if (args[1]['name'] == ""):
-            d = args[1]
-        else:
-            d = list(filter(lambda x: x['name'] == "dim", args))[0]
-
-        if (args[2]['name'] == ""):
-            i = args[2]
-        else:
-            i = list(filter(lambda x: x['name'] == "index", args))[0]
+        t = args[0]
+        d = args[1]
+        i = args[2]
 
         assert (t['type'] == i['type'] == "tensor")
         assert (d['type'] == "int")
@@ -400,17 +388,8 @@ class MaskedSelect(OperatorLayerBase):
         assert (len(args) == 2)
 
         #Get input and mask
-        if (args[0]['name'] == ""):
-            t = args[0]
-        else:
-            t = list(filter(lambda x: x['name'] == "input", args))[0]
-
-        if (args[1]['name'] == ""):
-            m = args[1]
-        else:
-            m = list(filter(lambda x: x['name'] == "mask", args))[0]
-
-        assert (m['dtype'] == "uint8")
+        t = args[0]
+        m = args[1]
 
         tensor = t['shape']
         mask = m['shape']
