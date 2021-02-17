@@ -38,7 +38,6 @@ class Cat(OperatorLayerBase):
 
         assert (mod == "torch")
         assert (op == "cat")
-        #assert (len(args) >= 2), "Unexpected args {}".format(args)
 
         dtype = args[0]['dtype']
         tensors = []
@@ -55,11 +54,13 @@ class Cat(OperatorLayerBase):
                 else:
                     assert len(arg['shape']) == self.num_dims,\
                             "Unexpected tensor shape {} expecting {}".format(arg['shape'], self.num_dims)
-            if arg['name'] == 'dim':
-                axis = arg['value']
-                if axis == -1:
-                    axis = self.num_dims - 1
-                self.axis = axis
+            else:
+                ## Last arg is dim - dim is not always present in the arg name
+                if arg['name'] == 'dim' or not (arg['name'] and arg['type'] == 'int') :
+                    axis = arg['value']
+                    if axis == -1:
+                        axis = self.num_dims - 1
+                    self.axis = axis
 
         self.input = tensors
         self.sub = d.sub
