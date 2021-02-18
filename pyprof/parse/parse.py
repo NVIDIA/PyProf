@@ -121,9 +121,7 @@ def main():
             else:
                 currSeqId = k.seqId[0]
 
-            #if ((currSeqId == prevSeqId) and (k.op == prevOp)):
-            if ((currSeqId == prevSeqId) and (k.op == prevOp)) or ((k.op[0] == "forward") and (k.op == prevOp) and
-                                                                   (k.mod[0] in ["LSTMCell", "GRUCell", "RNNCell"])):
+            if ((currSeqId == prevSeqId) and (k.op == prevOp)):
                 #The second condition is to trap cases when pytorch does not use cudnn for a LSTMCell.
                 k.subSeqId = prevSubSeqId + 1
 

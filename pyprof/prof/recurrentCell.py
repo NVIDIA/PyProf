@@ -93,6 +93,7 @@ class RNNCell(OperatorLayerBase):
 
     def params(self):
         if self.gemm is None:
+            #                                      input_size        hidden_size      batch_size
             p = OrderedDict([('cell', self.cell), ('X', self.inp), ('H', self.hid), ('B', self.b), ('type', self.type)])
         else:
             assert self.m is not None
