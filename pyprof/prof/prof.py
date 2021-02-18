@@ -46,6 +46,7 @@ from .conv import Conv
 from .activation import Activation
 from .index_slice_join_mutate import Cat, Reshape, MaskedScatter, Gather, Nonzero, IndexSelect, MaskedSelect
 from .recurrentCell import RNNCell
+from .recurrent import RNNBase
 from .normalization import BatchNorm
 from .randomSample import RandPerm
 from .loss import MSELoss
@@ -74,6 +75,10 @@ def findFpropKernel(seq):
 def foo(mod, op, d):
     if (op[0] == "linear"):
         xx = Linear(d)
+
+    # rnn, lstm, gru (multiple layers, dropout, bidirectional)
+    elif (mod[0] in ["LSTM", "GRU"]) and (op[0] == "forward"):
+        xx = RNNBase(d)
 
     # rnncell, lstmcell, grucell
     elif (mod[0] in ["LSTMCell", "GRUCell"]) and (op[0] == "forward"):
