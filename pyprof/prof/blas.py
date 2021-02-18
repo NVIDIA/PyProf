@@ -184,7 +184,7 @@ class Matmul(OperatorLayerBase):
         self.name = d.name
         self.sub = d.sub
 
-        assert ((mod == "torch") and (op == "matmul")) or ((mod == "Tensor") and (op == "__matmul__"))
+        assert ((mod == "torch" or mod == "Tensor") and ('matmul' in op)), "Unexpected mod {} op {} combo for args {}".format(mod, op, args)
         assert (len(args) == 2)
 
         assert any([x in d.name for x in Matmul.NON_TC + ["gemm", "gemv"]])
