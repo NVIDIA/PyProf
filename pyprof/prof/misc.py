@@ -82,15 +82,24 @@ class Copy(OperatorLayerBase):
 
         assert (mod == "Tensor")
         assert (op == "copy_")
-        assert (len(args) == 2)
+        assert (len(args) >= 2), "Op {} unexpected args {}".format(op, args)
 
-        dst, src = args
-        assert (src['type'] == dst['type'])
-        assert (src['shape'] == dst['shape'])
+        dst = args[0]
+        src = args[1]
+        if src['type'] == 'tensor' and dst['type'] == 'tensor':
+            assert (src['shape'] == dst['shape'])
+            self.shape = src['shape']
+            self.stype = src['dtype']
+            self.dtype = dst['dtype']
+        else:
+            if 'value' in src:
+                self.shape = dst['shape']
+                self.stype = src['type']
+                self.dtype = dst['dtype']
+            else:
+                assert False, "Unexpected src {} dst {} attrs".format(src, dst)
 
-        self.shape = src['shape']
-        self.stype = src['dtype']
-        self.dtype = dst['dtype']
+        
 
     def params(self):
         #The data type might be different
