@@ -113,12 +113,12 @@ class Conv(OperatorLayerBase):
             assert (i['dtype'] == w['dtype'])
             N, C1, W = i['shape']
             K, C2, S = w['shape']
-            assert (C1 == C2)
+            #assert (C1 == C2)
             p = p['value'] if Utility.isscalar(p['type']) else p['value'][0]
             s = s['value'] if Utility.isscalar(s['type']) else s['value'][0]
             d = d['value'] if Utility.isscalar(d['type']) else d['value'][0]
             g = g['value']
-            assert (g == 1)
+            #assert (g == 1)
             H = 1
             R = 1
 
