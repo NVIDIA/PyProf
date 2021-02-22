@@ -82,7 +82,7 @@ Quick Installation Instructions
 
 * Should display ::
 
-   pyprof            3.9.0.dev0
+   pyprof            3.10.0.dev0
 
 .. quick-install-end-marker-do-not-remove
 
