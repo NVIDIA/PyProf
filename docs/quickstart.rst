@@ -39,7 +39,7 @@ Prerequisites
   drop down button. After cloning the repo be sure to select the r<xx.yy> 
   release branch that corresponds to the version of PyProf want to use::
 
-  $ git checkout r20.12
+  $ git checkout r21.02
 
 * If you are starting with a pre-built NGC container, you will need to install 
   Docker and nvidia-docker. For DGX users, see `Preparing to use NVIDIA Containers
@@ -75,7 +75,7 @@ the GitHub repo and checkout the release version of the branch that
 you want to build (or the master branch if you want to build the
 under-development version)::
 
-  $ git checkout r20.12
+  $ git checkout r21.02
 
 Then use docker to build::
 
