@@ -40,6 +40,9 @@ class MSELoss(OperatorLayerBase):
         assert (len(args) == 3)
 
         #Get input, target and reduction
+        """
+        Commented out original code and replaced with direct assignment
+        of the args
         if (args[0]['name'] == ""):
             x = args[0]
         else:
@@ -54,6 +57,10 @@ class MSELoss(OperatorLayerBase):
             r = args[2]
         else:
             r = list(filter(lambda x: x['name'] == "reduction", args))[0]
+        """
+        x = args[0]
+        y = args[1]
+        r = args[2]
 
         assert (x['type'] == y['type'] == "tensor")
         assert (x['shape'] == y['shape'])
