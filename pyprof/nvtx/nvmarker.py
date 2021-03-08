@@ -107,6 +107,25 @@ def traceMarker(op_name):
 
     config = Config()
 
+    def cleanup_string(func_str: str) -> None:
+        """
+            Reduce the footprint of the string as if its too large nsys drops very
+            large nvtx marker strings. This issue is fixed in newer nsys version.
+
+        Args:
+            func_str : string to be truncated
+
+        Raises:
+            None
+        """
+        separator = '/'
+        name_fields = func_str.split(separator)
+        num_fields  = len(name_fields)
+        max_fields  = 6
+        if num_fields > max_fields:
+            num_fields = max_fields
+        func_str = separator.join(name_fields[0-num_fields:])
+
     # Return a trace marker string and func_stack string
     #
     def get_trace_info(op_name):
@@ -152,6 +171,8 @@ def traceMarker(op_name):
 
         if config.func_stack_enabled:
             func_stack = dlprof.cleanup_func_stack(func_stack, op_name)
+
+        cleanup_string(func_stack)
 
         return cadena, func_stack
 
