@@ -145,7 +145,8 @@ class Pointwise(OperatorLayerBase):
 
         # Unary
         if self.op() in Pointwise.unary + Pointwise.representation:
-            assert (len(self.input) == 1)
+            # Relaxing assert. clamp has > 1 input arguments.
+            assert (len(self.input) >= 1)
             b = 2 * self.input[0].bytes
             f = self.input[0].size
 
