@@ -53,9 +53,7 @@ class OneZero(OperatorLayerBase):
                 self.input = Tensor(args[0]['value'], "float")
             elif args[0]['type'] == "int":
                 # Get all unnamed arguments of type int
-                args = list(filter(
-                        lambda x: x['name'] == "" and x['type'] == "int"),
-                        args)
+                args = list(filter(lambda x: x['name'] == "" and x['type'] == "int", args))
                 shape = [x['value'] for x in args]
                 self.input = Tensor(shape, "float")
             else:
