@@ -188,6 +188,8 @@ class DLProf(object):
                 ## otherwise, push '-1'. this allows the input param shapes to align with the
                 ## input_callids when building the graph
                 input_callid_list.append(-1)
+                dprint(f"Callid {call_id} Input tensor ptr {input_ptr} not found in callid map"\
+                       f"using  -1")
 
     @classmethod
     def capture_outputs(cls, call_id, result):
