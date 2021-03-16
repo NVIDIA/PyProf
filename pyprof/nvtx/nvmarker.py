@@ -107,25 +107,6 @@ def traceMarker(op_name):
 
     config = Config()
 
-    def cleanup_string(func_str: str) -> None:
-        """
-            Reduce the footprint of the string as if its too large nsys drops very
-            large nvtx marker strings. This issue is fixed in newer nsys version.
-
-        Args:
-            func_str : string to be truncated
-
-        Raises:
-            None
-        """
-        separator = '/'
-        name_fields = func_str.split(separator)
-        num_fields  = len(name_fields)
-        max_fields  = 6
-        if num_fields > max_fields:
-            num_fields = max_fields
-        func_str = separator.join(name_fields[0-num_fields:])
-
     # Return a trace marker string and func_stack string
     #
     def get_trace_info(op_name):
@@ -171,8 +152,6 @@ def traceMarker(op_name):
 
         if config.func_stack_enabled:
             func_stack = dlprof.cleanup_func_stack(func_stack, op_name)
-
-        cleanup_string(func_stack)
 
         return cadena, func_stack
 
@@ -375,6 +354,40 @@ def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
 				print("Op: %s" % str(op))
 				print(dir(arg))
 			'''
+    def compress_to_str(in_cadena, threshold: int) -> str:
+        ''' Compress a datastructure into a string that fits within a threshold length
+
+        Args:
+            in_cadena : input data structure to be compressed
+            threshold : character threshold that limits the size of output string
+
+        Returns:
+            String output
+
+        Raises:
+            Asserts if the compression fails
+        '''
+        # Do nothing special if the string is within threshold
+        if len(str(in_cadena)) < threshold:
+            return str(in_cadena)
+
+        # Truncate a list's contents in a specifc way
+        def truncate_name(in_list):
+            for idx, item in enumerate(in_list):
+                # remove the string before the first '/' and return the rest
+                assert 'name' in item
+                in_list[idx]['name'] = '/'.join((item['name'].split('/')[1:]))
+
+        assert 'args' in in_cadena
+        while True:
+            pre_len = len(str(in_cadena['args']))
+            truncate_name(in_cadena['args'])
+            post_len = len(str(in_cadena['args']))
+
+            if pre_len == post_len or len(str(in_cadena)) < threshold:
+                break
+        assert len(str(in_cadena)) < threshold, "Nvtx marker string compression failed"
+        return str(in_cadena)
 
     cadena = {}
     cadena['mod'] = mod.__name__
@@ -388,8 +401,12 @@ def argMarker(mod, op, args, kwargs, idx=-1, inputid_list=[]):
     for k, v in kwargs.items():
         foo((v, ), k)
 
-    return str(cadena)
-
+    # For some networks this string can be too large and cause an overflow in nsys.
+    # The overflow does not result in an error in nsys but valuable node information
+    # is lost in the db, leading to errors in processing steps downstream
+    threshold = 2**16
+    cadena_str_out = compress_to_str(cadena, threshold)
+    return cadena_str_out
 
 def patchClass(cls):
     for f in dir(cls):
