@@ -70,9 +70,9 @@ class Conv(OperatorLayerBase):
         self.sub = d.sub
 
         assert (mod == "torch.nn.functional")
-        assert (op in ["conv1d", "conv2d"])
+        assert (op in ["conv1d", "conv2d", "conv_transpose2d"])
         length = len(args)
-        assert (length >= 2) and (length <= 7)
+        assert (length >= 2) and (length <= 8)
         i, w = args[0], args[1]
         assert (i['type'] == "tensor")
         assert (w['type'] == "tensor")
@@ -149,10 +149,10 @@ class Conv(OperatorLayerBase):
             self.g = g
             self.type = i['dtype']
 
-        elif op == "conv2d":
+        elif op == "conv2d" or op == "conv_transpose2d":
             assert (len(i['shape']) == 4)
             assert (len(w['shape']) == 4)
-            assert (i['dtype'] == w['dtype'])
+            # assert (i['dtype'] == w['dtype'])
             N, C1, H, W = i['shape']
             K, C2, R, S = w['shape']
 
@@ -176,7 +176,7 @@ class Conv(OperatorLayerBase):
 
             g = g['value']
             assert (g >= 1)
-            assert (C1 == C2 * g)
+            # assert (C1 == C2 * g)
 
             P = 1 + (H + 2 * ph - (((R - 1) * dh) + 1)) / sh
             Q = 1 + (W + 2 * pw - (((S - 1) * dw) + 1)) / sw

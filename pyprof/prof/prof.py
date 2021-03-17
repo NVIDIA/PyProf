@@ -87,6 +87,7 @@ def foo(mod, op, d):
     elif op[0] in [
             "conv1d",
             "conv2d",
+            "conv_transpose2d"
     ]:
         xx = Conv(d)
 
