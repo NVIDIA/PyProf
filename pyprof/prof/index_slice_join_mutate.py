@@ -24,6 +24,72 @@ from functools import reduce
 import operator
 
 
+class Stack(OperatorLayerBase):
+    """
+	An object of Stack, similar to Cat
+	"""
+    def __init__(self, d):
+        marker = eval(d.argMarker[0])
+        mod = marker['mod']
+        op = marker['op']
+        args = marker['args']
+        self.mod_ = mod
+        self.op_ = op
+        self.axis = 0
+        self.num_dims = 0
+
+        assert (mod == "torch")
+        assert (op == "stack")
+
+        inputs = []
+        # Find the value of the axis Stack
+        for arg in args:
+
+            if arg['type'] == "tensor":
+                t = Tensor(arg['shape'], arg['dtype'])
+                inputs.append(t)
+                if self.num_dims == 0:
+                    self.num_dims = len(arg['shape'])
+
+            elif arg['type'] == "float":
+                t = Tensor([], arg['type']) # scalar
+                inputs.append(t)
+
+            else:
+                ## Last arg is dim - dim is not always present in the arg name
+                if arg['name'] == 'dim':
+                    axis = arg['value']
+
+        if axis == -1:
+            if self.num_dims != 0:
+                axis = self.num_dims - 1
+            else:
+                axis = 0
+
+        self.axis = axis
+        self.input = inputs
+
+    def params(self):
+        param_str = ";".join([str(t) for t in self.input])
+        param_str = ",".join(["T={}".format(param_str), "A={}".format(self.axis)])
+        return param_str
+
+    def flops(self):
+        return 0
+
+    def tc(self):
+        return "-"
+
+    def op(self):
+        return self.op_
+
+    def mod(self):
+        return self.mod_
+
+    def bytes(self):
+        return 0
+
+
 class Cat(OperatorLayerBase):
 
     def __init__(self, d):

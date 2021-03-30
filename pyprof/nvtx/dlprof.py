@@ -164,15 +164,19 @@ class DLProf(object):
                 input_tensors.append({
                     'ptr': arg.data_ptr(),
                 })
+                dprint(f"input tensor shape {arg.size()}")
+
             elif isinstance(arg, list) or isinstance(arg, tuple):
                 for item in arg:
                     if isinstance(item, torch.Tensor):
+                        dprint(f"input tensor shape {item.size()}")
                         input_tensors.append({
                             'ptr': item.data_ptr(),
                         })
                         if isinstance(item, list) or isinstance(item, tuple):
                             for item2 in item:
                                 if isinstance(item2, torch.Tensor):
+                                    dprint(f"input tensor shape {item2.size()}")
                                     input_tensors.append({
                                         'ptr': item2.data_ptr(),
                                     })
@@ -204,6 +208,9 @@ class DLProf(object):
                     output_tensors.append({
                         'ptr': item.data_ptr(),
                     })
+        else:
+            dprint(f"************** result is NOT torch.Tensor, list or tuple but {type(result)} *****************")
+            #raise Exception(f"{result} is not torch.Tensor, list or tuple")
         for out_port, _ in enumerate(output_tensors):
             output_ptr = output_tensors[out_port]['ptr']
             cls.op_to_out_tensor_map[output_ptr] = f"{call_id}"

@@ -44,7 +44,7 @@ from .optim import Adam
 from .misc import *
 from .conv import Conv
 from .activation import Activation
-from .index_slice_join_mutate import Cat, Reshape, MaskedScatter, Gather, Nonzero, IndexSelect, MaskedSelect
+from .index_slice_join_mutate import Cat, Reshape, MaskedScatter, Gather, Nonzero, IndexSelect, MaskedSelect, Stack
 from .recurrentCell import RNNCell
 from .recurrent import RNNBase
 from .normalization import BatchNorm
@@ -117,6 +117,9 @@ def foo(mod, op, d):
         xx = Dropout(d)
 
     #Index, Slice, Join, Mutate
+    elif (op[0] == "stack"):
+        xx = Stack(d)
+
     elif (op[0] == "cat"):
         xx = Cat(d)
 
