@@ -59,14 +59,12 @@ class Stack(OperatorLayerBase):
                 ## Last arg is dim - dim is not always present in the arg name
                 if arg['name'] == 'dim':
                     axis = arg['value']
-
-        if axis == -1:
-            if self.num_dims != 0:
-                axis = self.num_dims - 1
-            else:
-                axis = 0
-
-        self.axis = axis
+                    if axis == -1:
+                        if self.num_dims != 0:
+                            axis = self.num_dims - 1
+                        else:
+                            axis = 0
+                        self.axis = axis
         self.input = inputs
 
     def params(self):
