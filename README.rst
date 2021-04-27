@@ -23,8 +23,8 @@ PyProf - PyTorch Profiling tool
 
     **LATEST RELEASE: You are currently working on the main branch which
     tracks under-development progress towards the next release. The
-    latest release of the PyProf is 3.9.0 and is available on branch** `r21.03
-    <https://github.com/NVIDIA/PyProf/blob/r21.03>`_.
+    latest release of the PyProf is 3.10.0 and is available on branch** `r21.04
+    <https://github.com/NVIDIA/PyProf/blob/r21.04>`_.
 
 .. overview-begin-marker-do-not-remove
 
@@ -56,10 +56,10 @@ following additional features:
 
 .. overview-end-marker-do-not-remove
 
-The current release of PyProf is 3.9.0 and is available in the 21.03 release of
+The current release of PyProf is 3.10.0 and is available in the 21.04 release of
 the PyTorch container on `NVIDIA GPU Cloud (NGC) <https://ngc.nvidia.com>`_. The 
-branch for this release is `r21.03
-<https://github.com/NVIDIA/PyProf/tree/r21.03>`_.
+branch for this release is `r21.04
+<https://github.com/NVIDIA/PyProf/tree/r21.04>`_.
 
 Quick Installation Instructions
 -------------------------------
