@@ -18,13 +18,16 @@
 PyProf - PyTorch Profiling tool
 ===============================
 
-    **ANNOUNCEMENT: The default branch for PyProf has changed to 'main'. Please
-    update all pulls and PRs accordingly.**
-
-    **LATEST RELEASE: You are currently working on the main branch which
-    tracks under-development progress towards the next release. The
-    latest release of the PyProf is 3.10.0 and is available on branch** `r21.04
-    <https://github.com/NVIDIA/PyProf/blob/r21.04>`_.
+    **ANNOUNCEMENT:** 
+    On June 30th 2021, NVIDIA will no longer make contributions to the PyProf repository.
+    
+    To profile models in PyTorch, please use `NVIDIA Deep Learning Profiler (DLProf) <https://docs.nvidia.com/deeplearning/frameworks/dlprof-user-guide/>`_
+    
+    DLProf can help data scientists, engineers, and researchers understand and improve performance of their models by analyzing text reports or visualizing the reports in a web browser with the DLProf Viewer
+    
+    DLProf is available on NGC or as a python PIP wheel installation.
+    
+    To look for continued development on PyProf, please use https://github.com/adityaiitb/PyProf
 
 .. overview-begin-marker-do-not-remove
 
