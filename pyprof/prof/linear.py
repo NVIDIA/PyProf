@@ -112,7 +112,7 @@ class Linear(OperatorLayerBase):
         if any(x in d.name for x in Linear.gemmKernels):
             self.op_ = "linear"
         else:
-            assert any(x in d.name for x in Linear.biasKernels), f"Kernel name: {d.name}"
+            # assert any(x in d.name for x in Linear.biasKernels), f"Kernel name: {d.name}"
             self.op_ = "bias"
         '''
 		elif (("kernelPointwiseApply2" in d.name) or ("kernelReduceContigDim" in d.name) or ("kernelReduceNoncontigDim_shared" in d.name)):
