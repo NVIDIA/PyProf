@@ -116,7 +116,7 @@ class Pointwise(OperatorLayerBase):
         self.unfiltered_args = args
 
         # Filter out non tensors
-        #args = list(filter(lambda x: x['type'] == "tensor", args))
+        args = list(filter(lambda x: x['type'] in ("tensor", "float", "int"), args))
 
         assert (len(args) <= 4)
         self.input = []
