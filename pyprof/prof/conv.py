@@ -110,7 +110,6 @@ class Conv(OperatorLayerBase):
         if op == "conv1d":
             assert (len(i['shape']) == 3)
             assert (len(w['shape']) == 3)
-            assert (i['dtype'] == w['dtype'])
             N, C1, W = i['shape']
             K, C2, S = w['shape']
             assert (C1 == C2)
